@@ -1,0 +1,125 @@
+---
+title: "Collaborate Session 1"
+author: "BUDA 525"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Why Bootstrap
+
+Up to this point I've discussed bootstrap in the context of means, we can use it
+for almost anything.  One of the more important things it can do is give us insight
+when the CLT or sampling distribution is intractable. 
+
+Assume we have the $p$th quantile $\theta$ of a random variable that comes from Distribution $F$, with probability mass/density function $f$. The sample $p$th quantile for out data is $\hat{\theta}$.  Basically what we are saying is that we know the distribution of $f$, but is that reality?  No in reality we don't really know the distribution of any of our data. But let's see how this all plays in anyways. The sampling distribution for $\hat\theta$ is 
+
+$$
+\hat\theta\sim N(\theta, \frac{p(1-p)}{nf^2(\theta)}).
+$$
+
+So really to apply our CLT we have to assume what the distribution of the data is, which is a fairly big assumption.  Instead we can bootstrap this distribution.  
+
+```{r}
+library(ISLR)
+dim(College)
+apps<-College$Apps
+set.seed(1900)
+bootsApp<-NULL
+for(j in 1:10000){
+  bootsApp<-c(bootsApp,median(sample(apps,length(apps),replace = TRUE)))
+}
+hist(bootsApp)
+```
+
+
+
+## Matrix Example
+
+Looking at wages of 3000 workers in the Mid-Atlantic, doing 10000 bootstrap samples
+```{r}
+## install.packages("ISLR")
+library(ISLR)
+head(Wage)
+help(Wage)
+summary(Wage)
+hist(Wage$wage)
+set.seed(1040)
+store<-matrix(0,3000,10000)
+for(i in 1:10000){
+  store[,i]=sample(Wage$wage,3000,replace=TRUE)
+}
+boots<-apply(store,2,mean)
+length(apply(store,2,mean))
+hist(boots)
+dim(boots)
+length(boots)
+dim(store)
+quantile(boots,c(.1,.9))
+quantile(boots,c(.05,.95))
+quantile(boots,c(.25,.75))
+
+set.seed(2626)
+store<-matrix(0,3000,10000)
+for(i in 1:10000){
+  store[,i]=sample(Wage$wage,3000,replace=TRUE)
+}
+boots<-apply(store,2,mean)
+quantile(boots,c(.1,.9))
+```
+
+## List Example
+```{r}
+bstore<-NULL
+bstore
+set.seed(1234)
+for(k in 1:1000){
+bstore[[k]]=sample(Wage$age,3000,replace=TRUE)
+}
+dim(bstore)
+length(bstore)
+bootsl<-sapply(bstore,mean)
+hist(bootsl)
+quantile(bootsl,c(.1,.9))
+
+
+bstore<-NULL
+set.seed(154)
+Mine<-Sys.time()
+for(k in 1:1000){
+bstore[[k]]=sample(Wage$age,3000,replace=TRUE)
+}
+bootsl<-sapply(bstore,mean)
+Mine2<-Sys.time()
+Mine2-Mine
+hist(bootsl)
+quantile(bootsl,c(.1,.9))
+```
+
+## No Storage Example
+
+Now we want to compare salaries between jobclass
+
+Is the mean salary for information workers higher than industrial workers? 
+
+
+```{r}
+mclass<-tapply(Wage$wage,Wage$jobclass,mean)
+my_stat<-mclass[2]-mclass[1]
+my_stat
+##Info-Industrial>0 (Alt Hyp)
+## Info-Industiral=0 (Null Hyp)
+## We want to generate the null hypothesis that the two means are equal
+## We want to know do info make more than industrial (avg higher)
+set.seed(1900)
+samp_d<-NULL
+for(j in 1:10000){
+  NewDat<-data.frame(w=Wage$wage,jc=sample(Wage$jobclass,3000))
+  my_stat_boot<-tapply(NewDat$w,NewDat$jc,mean)
+  samp_d<-c(samp_d,my_stat_boot[2]-my_stat_boot[1])
+}
+hist(samp_d,xlim=c(-20,20))
+abline(v=my_stat)
+sum(samp_d>=my_stat)/10000
+```

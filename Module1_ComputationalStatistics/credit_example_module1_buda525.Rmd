@@ -1,0 +1,92 @@
+---
+title: "Module 1 Extra Example"
+author: "BUDA 451"
+date: "2024-08-29"
+output: word_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Exploring the data
+I want to create a bootstrap confidence interval for credit rating to discuss this customer base.
+
+Let's first start off by doing some exploratory data analysis
+```{r}
+library(ISLR)
+head(Credit)
+summary(Credit)
+```
+
+HERE IS WHERE YOU WOULD DISCUSS ANY INSIGHTS YOU HAVE ON THE RESULTS
+
+Moving on to the next part we will create a 80% CI on the mean of Credit Rating
+```{r}
+boot_ci<-NULL
+set.seed(1010)
+for(j in 1:1000){
+  c1=mean(sample(Credit$Rating,dim(Credit)[1],replace=TRUE))
+  boot_ci=c(boot_ci,c1)
+}
+hist(boot_ci)
+```
+
+Finally we will explore the confidence interval
+
+```{r}
+quantile(boot_ci,c(.1,.9))
+```
+
+Here is where you would interpret this interval.  So we are 80% confident based on this bootstrap confidence interval that the mean of credit rating is between 344.47 and 366.08.  
+
+
+### Randomization Test
+
+Next we want to explore if there is a significant difference between the credit rating of those who are married and those who are not.  Our organization believes that credit ratings for married individuals are higher.  So we need to investigate that claim.  In math we can write that as
+
+$$
+Married > Non-Married
+$$
+which implies that 
+$$
+Married-Non-Married >0.
+$$
+We know this is an alternative hyptothesis so we can state the null is just the oppisite of that.  Non-Married individuals have a credit score equivalent or greater than that of married individuals.  
+
+Let's investigate
+```{r}
+tapply(Credit$Rating,Credit$Married,summary)
+means_true=tapply(Credit$Rating,Credit$Married,mean)
+my_stat=means_true[2]-means_true[1]
+my_stat
+```
+
+Looking at this we see that the data set has a difference of just above 11.6 in it.  So let's test it and generate the test using randomized distributions.  
+
+So we will generate a null distribution under the statement that there is no difference between married and non-married individuals.  
+
+```{r}
+
+set.seed(730)
+boot_diff=NULL
+for(k in 1:10000){
+  shake=sample(Credit$Married,dim(Credit)[1],replace = FALSE)
+  new_df=data.frame(Married=shake,Rating=Credit$Rating)
+  means=tapply(new_df$Rating,new_df$Married,mean)
+  boot_diff<-c(boot_diff,means[2]-means[1])
+}
+```
+
+Now that we have generated this distribution let's look at some of the results. 
+
+```{r}
+hist(boot_diff)
+abline(v=means_true[2]-means_true[1],col=4)
+length(which(boot_diff>means_true[2]-means_true[1]))/10000
+```
+
+INTERPRET IT HERE! 
