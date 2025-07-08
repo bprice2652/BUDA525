@@ -26,7 +26,9 @@ structures, and how to randomly generate data and sample information to
 discuss bootstrap and randomization testing, to better understand
 statistical inference techniques. We will introduce some basic R
 concepts and data structures, random number generation, and then getting
-into combining this to create statistical inference.
+into combining this to create statistical inference. The goal is to
+remind you of your statistical foundations, while setting some strong
+computaitonal foundations.
 
 ## Introduction to R
 
@@ -1914,7 +1916,7 @@ understand employee productivity. Load the data
 
 ``` r
 atl <- read.csv("https://www.lock5stat.com/datasets1e/CommuteAtlanta.csv")
-head(atl)
+atl%>%head()
 ```
 
     ##      City Age Distance Time Sex
@@ -1929,13 +1931,13 @@ Let’s take a look at a few visuals just to get a feel of whats happening
 here.
 
 ``` r
-hist(atl$Time, main="Histogram of Atl Commute Times")
+atl$Time%>%hist(main="Histogram of Atl Commute Times")
 ```
 
 ![](BUDA525Module1_files/figure-gfm/unnamed-chunk-76-1.png)<!-- -->
 
 ``` r
-boxplot(atl$Time, main="Boxplot of Atl Commute Times")
+atl$Time%>%boxplot(main="Boxplot of Atl Commute Times")
 ```
 
 ![](BUDA525Module1_files/figure-gfm/unnamed-chunk-76-2.png)<!-- -->
@@ -1970,10 +1972,11 @@ length(atlTime)
 ``` r
 boots <- NULL
 for(i in 1:10000){
-  meanAtl <- mean( sample(atlTime, 500, replace=TRUE))
+  meanAtl <- atlTime%>%sample(size = 500,replace=TRUE)%>%mean()
+    #mean( sample(atlTime, 500, replace=TRUE))
   boots <- c(boots, meanAtl)  
 }
-hist(boots, main="Sample Distribution for Mean Atlanta Commute Time")
+boots%>%hist(main="Sample Distribution for Mean Atlanta Commute Time")
 ```
 
 ![](BUDA525Module1_files/figure-gfm/unnamed-chunk-77-1.png)<!-- -->
@@ -1981,7 +1984,7 @@ hist(boots, main="Sample Distribution for Mean Atlanta Commute Time")
 Looks symmetric so we’ll use both intervals anyways.
 
 ``` r
-quantile(boots, c(.025,.975))
+boots%>%quantile(c(.025,.975))
 ```
 
     ##     2.5%    97.5% 
@@ -2014,20 +2017,27 @@ For sensitivity analysis purposes let’s say we only want to look at
 commute times under 90 minuets. Let’s see if anything changes
 
 ``` r
-atlQuicker <- subset(atl, Time <= 90)
+atlQuicker <- atl%>%filter(Time<=90)
 atlQuickTimes <- atlQuicker$Time
-mean(atlQuickTimes)
+atlQuickTimes%>%mean
 ```
 
     ## [1] 27.94747
 
 ``` r
-sd(atlQuickTimes)
+atlQuickTimes%>%sd
 ```
 
     ## [1] 17.00825
 
 ``` r
+atlQuickTimes%>%length()
+```
+
+    ## [1] 495
+
+``` r
+#Just to remind you you can do it both ways
 length(atlQuickTimes)
 ```
 
@@ -2036,13 +2046,13 @@ length(atlQuickTimes)
 Lets look at the data again:
 
 ``` r
-hist(atlQuickTimes, main="Histogram of Times <= 90 Minutes")
+atlQuickTimes%>%hist(main="Histogram of Times <= 90 Minutes")
 ```
 
 ![](BUDA525Module1_files/figure-gfm/unnamed-chunk-80-1.png)<!-- -->
 
 ``` r
-boxplot(atlQuickTimes, main="Boxplot of Times <= 90 Minutes")
+atlQuickTimes%>%boxplot(main="Boxplot of Times <= 90 Minutes")
 ```
 
 ![](BUDA525Module1_files/figure-gfm/unnamed-chunk-80-2.png)<!-- --> Now
@@ -2052,10 +2062,12 @@ lets do the bootstrap approach
 set.seed(2016)
 boots <- NULL
 for(i in 1:10000){
-  meanQuickAtl <- mean( sample(atlQuickTimes, 495, replace=TRUE))
+  meanQuickAtl <- atlQuickTimes%>%sample(.,size=length(.),replace=TRUE)%>%mean()
+  #Notice how using the . pipes the atlQuick times into both places where the . is.   
+  #mean( sample(atlQuickTimes, 495, replace=TRUE))
   boots <- c(boots, meanQuickAtl)  
 }
-hist(boots, main="Sample Distribution for Mean Commute for times <= 90 Minutes")
+boots%>%hist(main="Sample Distribution for Mean Commute for times <= 90 Minutes")
 ```
 
 ![](BUDA525Module1_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
@@ -2108,8 +2120,10 @@ stlTime <- stl$Time
 
 boots <- NULL
 for(i in 1:10000){
-  meanAtl <- mean( sample(atlTime, 500, replace=TRUE))
-  meanStl <- mean( sample(stlTime, 500, replace=TRUE))
+  meanAtl <- atlTime%>%sample(.,length(.),replace=TRUE)%>%mean()
+    #mean( sample(atlTime, length(atlTime), replace=TRUE))
+  meanStl <- stlTime%>%sample(.,length(.),replace=TRUE)%>%mean()
+    #mean( sample(stlTime, length(stlTime), replace=TRUE))
   boots <- c(boots, meanAtl - meanStl)  
 }
 hist(boots, main="Sample Distribution for meanAtl - meanStl")
@@ -2130,22 +2144,28 @@ quantile(boots, c(.025,.975))
 
     ## [1] 4.859005 9.420995
 
-The two intervals are close. Usually we want the two intervals to be
-close and if they are not more advanced bootstrapping techniques maybe
-necessary.
+In this case the two samples size were both 500 while this is preferred
+this does not always have to be the case. We look at the difference
+between the means at each bootstrap sample. We see that the difference
+between the mean of ATL time and the mean of STL time is above zero in
+the interval right? How does that help us? In general it looks like the
+distribution is centered between 6 and 8.
 
-In this case the two samples were both 500 while this is preferred this
-does not always have to be the case.
-
-What is our interpretation of the confidence interval?
+What is our interpretation of the confidence interval using the
+statistics above?
 
 Lets say we want to compare the difference in the averages of SAT scores
-for men and women.
+for men and women. Notice in this example we don’t have the same number
+of me and women observed in our sample. Which is ok, our sampling
+plan/bootstrap statistics take this into consideration. Let’s apply our
+methodology and look at our restults.
 
 ``` r
 survey <- read.csv("http://www.lock5stat.com/datasets1e/StudentSurvey.csv")
-males <- subset(survey, Gender == "M")
-females <- subset(survey, Gender == "F")
+males <- survey%>%filter(Gender=="M")
+#subset(survey, Gender == "M")
+females <- survey%>%filter(Gender=="F")
+  #subset(survey, Gender == "F")
 
 dim(males)
 ```
@@ -2161,8 +2181,10 @@ dim(females)
 ``` r
 boots <- NULL
 for(i in 1:10000){
-  maleAvg <- mean( sample(males$SAT, 193, replace=TRUE))
-  femaleAvg <- mean(sample (females$SAT, 169, replace=TRUE))
+  maleAvg <- males$SAT%>%sample(.,size=length(.),replace=TRUE)%>%mean()
+    #mean( sample(males$SAT, 193, replace=TRUE))
+  femaleAvg <- females$SAT%>%sample(.,size=length(.),replace=TRUE)%>%mean()
+    #mean(sample (females$SAT, 169, replace=TRUE))
   boots <- c(boots, maleAvg - femaleAvg)
 }
 hist(boots)
@@ -2183,6 +2205,12 @@ quantile(boots, c(.025,.975))
 
     ## [1] -6.842499 44.909826
 
+We see we have an interval with a difference between average mean test
+scoes between men and women with the center of the distribution being
+around 20. Notice that 0 is in the interval which tells us that no
+difference is plausible between men and women, which is an important
+conclusion (or non conclusion).
+
 Before you create a confidence interval using a bootstrap interval you
 need to check the bootstrap distribution. The bootstrap distribution
 needs to be reasonably centered around the original point estimate. Here
@@ -2195,21 +2223,25 @@ prices <- dat$Price
 
 boots <- NULL
 for(i in 1:10000){
-  stat <- median(sample(prices,25, replace=TRUE))
+  stat <- prices%>%sample(.,length(.),replace=TRUE)%>%median()
+  #median(sample(prices,25, replace=TRUE))
   boots <- c(boots, stat)
 }
-hist(boots, main="Bootstrap of Median Prices")
-abline(v=median(prices), col="red", lwd=2)
+boots%>%hist(main="Bootstrap of Median Prices")
+prices%>%median()%>%abline(v=., col="red", lwd=2)
 ```
 
 ![](BUDA525Module1_files/figure-gfm/unnamed-chunk-85-1.png)<!-- -->
 
 You want your bootstrap distribution to be reasonably symmetric around
 your original estimate. Also we want our sampling distribution to be
-“filled out”. It should resemble the distribution of a continuous
-variable. For sample statistics like the median typically a “smooth”
-bootstrap is done. In a module later in this course, we will discuss
-other types of bootstrap methods that are computationally complex.
+“filled out”, meaning no gaps like the large gaps in the picture you see
+above. It should resemble the distribution of a continuous variable. For
+sample statistics like the median typically a “smooth” bootstrap is
+done. There are numerous types of bootstrap that can be done, in many
+cases, we want a little bit larger sample size than what we have in this
+example, if we want to do a sample statistic like the median or a
+quantile.
 
 ## Randomized Distributons
 
@@ -2310,10 +2342,12 @@ an alternative hypothesis, leaving the null to be that the human aided
 algorithm is as good or better than the ml algorithm.  
 The null distribution is that the method doesn’t matter, so how do we
 deal with that, we randomly assign the methods to the results to see
-what that distribution would look like.
+what that distribution would look like. We are going to introduce the
+group_by, summarise functions as well. All this allows us to do is break
+our data into group, and calculate a field
 
 ``` r
-newMkt <- sample(mktData$strategy, 10)
+newMkt <- mktData$strategy%>%sample(size=10)
 newData <- data.frame(profit=mktData$profit, strategy= newMkt)
 newData
 ```
@@ -2339,6 +2373,24 @@ tapply(newData$profit, newData$strategy, mean)
 
 ``` r
 newMeans <- tapply(newData$profit, newData$strategy, mean)
+newMeans2<-newData%>%group_by(strategy)%>%summarise(mean_profit=mean(profit))
+newMeans
+```
+
+    ## Human    ML 
+    ## 133.8 123.2
+
+``` r
+newMeans2
+```
+
+    ## # A tibble: 2 × 2
+    ##   strategy mean_profit
+    ##   <chr>          <dbl>
+    ## 1 Human           134.
+    ## 2 ML              123.
+
+``` r
 newHumanMean <- newMeans[1]
 newMlMean <- newMeans[2]
 newMlMean - newHumanMean
@@ -2347,16 +2399,29 @@ newMlMean - newHumanMean
     ##    ML 
     ## -10.6
 
+``` r
+newHumanMean2<-newMeans2[1,2]
+newMLMean2<-newMeans2[2,2]
+newMLMean2-newHumanMean2
+```
+
+    ##   mean_profit
+    ## 1       -10.6
+
+``` r
+#notice this is a data frame because we operated in dplyr. 
+```
+
 Lets now do 10,000 of these to get the sampling distribution
 
 ``` r
 set.seed(1000)
 randomResults <- NULL
 for(i in 1:10000){
-newMkt <- sample(mktData$strategy, 10)
+newMkt <- mktData$strategy%>%sample(., length(.))
 newData <- data.frame(profit=mktData$profit, strategy= newMkt)
-  newMeans <- tapply(newData$profit, newData$strategy, mean)
-  randomResults <- c(randomResults, newMeans[2] - newMeans[1]) 
+newMeans2<-newData%>%group_by(strategy)%>%summarise(mean_profit=mean(profit))
+  randomResults <- c(randomResults, newMeans2[2,2]$mean_profit - newMeans2[1,2]$mean_profit) 
 }
 ```
 
