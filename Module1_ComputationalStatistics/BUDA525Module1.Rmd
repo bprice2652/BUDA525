@@ -1,7 +1,7 @@
 ---
 title: "Introduction to Satistical Computing and Computational Statistics"
 author: Brad Price, Ph.D.
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -13,10 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Traditional statistics courses focus on formulas and p-values that come from a table or straight out of the back of a textbook, while I believe that has it's 
 place in analytics we need to focus more on understanding the principals behind these methods, so that we can help decision makers understand what their data 
-is telling them.  To do this we use computational tools, software and HPC systems.  This module focuses on Statistical Computing, specifically R though we will
-touch on SAS and you will have access to SAS University (free software and trainings).  Both softwares have their place in the field, one of the reasons we use
-R is the price point (it's free) and SAS outside of universities is not.  SAS is used at many large firms, while R can be downloaded anywhere and used 
-anywhere.  Exposure to both is a great thing, though R has a stronger usage and place in the field of data science.
+is telling them.  To do this we use computational tools, software and HPC systems.  This module focuses on Statistical Computing, specifically R.  R is great for statistics and data analysis in general.  You will also learn Python in the BUDA program as it is built for machine learning and software integration, but has less statistical capabilities.  The truth is if I'm building true machine learning capabilities, I use Python. If I'm modeling for statistical purposes, I use R.  Since this class is focused on statistics and understanding priciples behind that, we're going to use R so we really get the foundations we need. Truth be told Python stole some of it's data analysis principles from R, so you will get some strong foundations here as well. 
 
 Through out this module we will discuss R as a software, data structures, and how to randomly generate data and sample information to discuss bootstrap and randomization testing, to better understand statistical inference techniques.  We will introduce some basic R concepts and data structures, random number
 generation, and then getting into combining this to create statistical inference.  

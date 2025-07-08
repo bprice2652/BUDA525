@@ -1,0 +1,2482 @@
+Introduction to Satistical Computing and Computational Statistics
+================
+Brad Price, Ph.D.
+
+## Introduction to Statistical Computing and Computational Statistics
+
+Traditional statistics courses focus on formulas and p-values that come
+from a table or straight out of the back of a textbook, while I believe
+that has it’s place in analytics we need to focus more on understanding
+the principals behind these methods, so that we can help decision makers
+understand what their data is telling them. To do this we use
+computational tools, software and HPC systems. This module focuses on
+Statistical Computing, specifically R. R is great for statistics and
+data analysis in general. You will also learn Python in the BUDA program
+as it is built for machine learning and software integration, but has
+less statistical capabilities. The truth is if I’m building true machine
+learning capabilities, I use Python. If I’m modeling for statistical
+purposes, I use R. Since this class is focused on statistics and
+understanding priciples behind that, we’re going to use R so we really
+get the foundations we need. Truth be told Python stole some of it’s
+data analysis principles from R, so you will get some strong foundations
+here as well.
+
+Through out this module we will discuss R as a software, data
+structures, and how to randomly generate data and sample information to
+discuss bootstrap and randomization testing, to better understand
+statistical inference techniques. We will introduce some basic R
+concepts and data structures, random number generation, and then getting
+into combining this to create statistical inference.
+
+## Introduction to R
+
+### What is R?
+
+R is a free statistical software that is used by both applied and
+research statisticians. If this were a statistics course for future
+statisticians that would be enough, but it’s not. So why are we using R
+in a business statistics class? Because over the past few years people
+in industry, start-ups, government, medicine, and consulting have
+realized what those in statistics realized over a decade ago; R one of
+the most powerful tools we have to analyze data. There are many other
+tools that have similar capabilities to R but the major advantage of R
+is that it is \*\* FREE \*\*. It is free as in no cost, and free as in
+you can do whatever you want with it. It is designed to do things as
+simple as calculating means and as complex as recommending songs on
+systems like Pandora. The last reason we are using it is because it is
+the \`\`it” thing in statistics and analytics right now. If you can use
+R you can use and learn any other statistical software easily. One of
+the things you will be able to take away from this course at the end is
+a line on your resume that you have experience in R.
+
+Now we need to understand this class isn’t going to be all about
+computing, but will be about how to use computing to answer questions of
+interest. Statistical software makes our life easier and allows us to
+focus more on how to apply results to our question, than about equations
+and actually doing the calculations by hand. Here we are going to use it
+to understand the 3 basic concepts of intro statistics
+
+- Central Limit Theorems
+- Hypothesis Testing
+- Confidence Intervals
+
+As we said before R is free to download. To download we go to . On this
+site there are a lot of different resources. If you look at the right
+hand side of the screen there are a ton of different links. To download
+R on the section of the left hand toolbar click the link titled . This
+will then take you to a page with a list of countries and systems that
+you can download R from. You should download it from the nearest point
+close to you (you can see where it is in the right hand column). Scroll
+down to USA and choose the link corresponding to the closest location.
+
+The next step is where MAC and Windows systems diverge. Pick the system
+you are running on from the top of the page and follow the steps
+associated with it.
+
+### Using R
+
+The next thing that we need to understand about R is that it is only as
+smart as the user, which means it will only do what you tell it to do.
+If you don’t let R know what to do then it can’t do it. The best way I
+think we can learn R is do review what you should know from previous
+courses and use R to do it.
+
+### Dealing with Data in R
+
+Sometimes the hardest part of an analysis is simply getting the data in
+the correct format to analyze. R functions really well with many
+different data types, but one of the easiest to deal with is .csv files.
+The reason we like .csv files so much is that we can save any Excel file
+as a .csv, all you need to do is change the file type (File\> Save as\>
+Save as type then select .csv). Before doing this make sure all
+formatting is removed. R doesn’t care if something is in dollars a color
+coding you have on a spreadsheet, it just wants the numbers or words you
+have the in file that is all.
+
+Something else to remember in R we always want our data to be in
+\`\`matrix” form. That is when it is in the excel file the rows should
+be our observations and the columns should be the variables of interest
+for those observations. Sometimes people call this a long form of the
+data, for visualizing it is not the best thing, but for analysis it is
+**The. Right. Thing.** (TRT).
+
+For now we will use a data set that is already in an **R Package**. R is
+developed by researches all over the world if you want the latest and
+greatest techniques to use on your data there is more than likely an R
+package that will do it for you. A lot of the time to give examples they
+will include data sets (which is what we will be using in this case).
+Now to get things started we need to install the package. You need to be
+connected to the internet.  
+To do this we type
+
+``` r
+install.packages("alr4")
+library(alr4)
+```
+
+Now this looks very complicated but it isn’t once we understand that R
+is built with functions so if we can understand the functions we
+understand exactly what R is doing. Let’s take a look at the command
+
+``` r
+install.packages("alr4")
+```
+
+We call
+
+- `install.packages` the function (the thing before the parentheses)
+- `alr4` is the object is the object (anything inside the parentheses).
+
+Think of this as we want to install the package alr4. Sometimes after
+you run a code like this especially if you are in a new R session it
+will ask you to select a new mirror (just select something in the US).
+
+Now that we have it installed we need to tell R to load the package. The
+`library` function does this. It tells the software that I have
+downloaded a package and I want to use what it is in it. In this case
+the function is `library` and the object is `alr4`. Notice also that
+`alr4` is not in quotation marks, that is because since it is downloaded
+R already recognizes it as something you’ve downloaded.
+
+The next thing we are going to do is look at a data set that looks at
+specific economic factors in different major cities from a 2003 Union
+Bank of Switzerland Report. It looks at the number of minuets of labor
+that goes into purchasing 1 kg of rice, 1 kg of bread, and 1 Big Mac in
+each of these cities. Other economic factors are also included. To look
+at a sample of the data we will use the `head` function on the data set
+which is named `BigMac2003`.
+
+``` r
+library(alr4)
+```
+
+    ## Loading required package: car
+
+    ## Loading required package: carData
+
+    ## Loading required package: effects
+
+    ## lattice theme set by effectsTheme()
+    ## See ?effectsTheme for details.
+
+``` r
+data(BigMac2003)
+head(BigMac2003)
+```
+
+    ##           BigMac Bread Rice FoodIndex  Bus Apt TeachGI TeachNI TaxRate
+    ## Amsterdam     16     9    9      65.9 2.00 890    34.3    20.5 40.2332
+    ## Athens        21    12   19      63.5 0.61 620    19.5    15.9 18.4615
+    ## Auckland      19    19    9      55.4 1.57 780    22.0    16.1 26.8182
+    ## Bangkok       50    42   25      46.4 0.47 120     4.2     4.0  4.7619
+    ## Barcelona     22    19   10      62.9 0.91 590    25.5    20.1 21.1765
+    ## Basel         15     7    7      98.4 2.34 930    78.5    57.6 26.6242
+    ##           TeachHours
+    ## Amsterdam         39
+    ## Athens            29
+    ## Auckland          40
+    ## Bangkok           35
+    ## Barcelona         39
+    ## Basel             35
+
+We see want to know how big the data set actually is to do this we check
+the dimension of the data set. To do this use the function
+
+``` r
+dim(BigMac2003)
+```
+
+    ## [1] 69 10
+
+We have 69 rows (cities) and 10 columns (variables).
+
+The `attach` function says take my data set and let me call the variable
+by their names. This means we can show that
+
+``` r
+attach(BigMac2003)
+BigMac
+```
+
+    ##  [1]  16  21  19  50  22  15  16  93  54  18  79  43  45  76  10  16  22  15  15
+    ## [20]  16  19  13  36  67  33 132  84  25  55  79  33  39  16  10  17  15  21  24
+    ## [39]  62  75  10  21  14  30 112 185  12  18  19  42  48  43  26  52  33  28  30
+    ## [58]  21  31  19  19  18  49  31  10  14  15  62  44
+
+``` r
+BigMac2003$BigMac
+```
+
+    ##  [1]  16  21  19  50  22  15  16  93  54  18  79  43  45  76  10  16  22  15  15
+    ## [20]  16  19  13  36  67  33 132  84  25  55  79  33  39  16  10  17  15  21  24
+    ## [39]  62  75  10  21  14  30 112 185  12  18  19  42  48  43  26  52  33  28  30
+    ## [58]  21  31  19  19  18  49  31  10  14  15  62  44
+
+are the exact same. This keeps us from having to write an excessive
+amount of code, and lets us call the variables by their name rather than
+by their data set and name.
+
+This is great but what if we wanted to know what all the cities we had
+in our data set without looking at the entire data set. To do this we
+use the function `rownames`.
+
+``` r
+rownames(BigMac2003)
+```
+
+    ##  [1] "Amsterdam"         "Athens"            "Auckland"         
+    ##  [4] "Bangkok"           "Barcelona"         "Basel"            
+    ##  [7] "Berlin"            "Bogota"            "Bratislava"       
+    ## [10] "Brussels"          "Bucharest"         "Budapest"         
+    ## [13] "Buenos_Aries"      "Caracas"           "Chicago"          
+    ## [16] "Copenhagen"        "Dubai"             "Dublin"           
+    ## [19] "Frankfurt"         "Geneva"            "Helsinki"         
+    ## [22] "Hong_Kong"         "Istanbul"          "Jakarta"          
+    ## [25] "Johannesburg"      "Karachi"           "Kiev"             
+    ## [28] "Kuala_Lumpur"      "Lagos"             "Lima"             
+    ## [31] "Lisbon"            "Ljubljana"         "London"           
+    ## [34] "Los_Angeles"       "Lugano"            "Luxembourg"       
+    ## [37] "Madrid"            "Manama"            "Manila"           
+    ## [40] "Mexico_City"       "Miami"             "Milan"            
+    ## [43] "Montreal"          "Moscow"            "Mumbai"           
+    ## [46] "Nairobi"           "New_York"          "Oslo"             
+    ## [49] "Paris"             "Prague"            "Riga"             
+    ## [52] "Rio_De_Janeiro"    "Rome"              "Santiago_De_Chile"
+    ## [55] "Sao_Paulo"         "Seoul"             "Shanghi"          
+    ## [58] "Singapore"         "Sofia"             "Stockholm"        
+    ## [61] "Sydney"            "Taipei"            "Tallinn"          
+    ## [64] "Tel_Aviv"          "Tokyo"             "Toronto"          
+    ## [67] "Vienna"            "Vilnius"           "Warsaw"
+
+So we see that Miami is in our data and is observation number 41 how do
+we look specifically at Miami without looking at everything else. Well
+if we think of our data as having rows and columns we want to look at
+the row corresponding to Miami (row 41, we will discuss later how to
+find things like this). To view observation 41 (Miami) we use
+
+``` r
+BigMac2003[41,]
+```
+
+    ##       BigMac Bread Rice FoodIndex  Bus Apt TeachGI TeachNI TaxRate TeachHours
+    ## Miami     10    10   11        44 1.25 700      34    25.7 24.4118         40
+
+If we look at this line of code a little more in depth the way we will
+see it is that in general it is the form of DATASET\[ Row Number, Column
+Number\]. So if I just wanted to view the first column of the data
+(corresponding to the variable BigMac) we would type
+
+``` r
+BigMac2003[,1]
+```
+
+    ##  [1]  16  21  19  50  22  15  16  93  54  18  79  43  45  76  10  16  22  15  15
+    ## [20]  16  19  13  36  67  33 132  84  25  55  79  33  39  16  10  17  15  21  24
+    ## [39]  62  75  10  21  14  30 112 185  12  18  19  42  48  43  26  52  33  28  30
+    ## [58]  21  31  19  19  18  49  31  10  14  15  62  44
+
+Again this is just the first column of the data. As we go on we will see
+more and more of how to access things in `R`, but the most important
+thing is to understand these basic data manipulation tools.
+
+### Basic Statistical Method
+
+We know that R isn’t just used for looking at data sets (could do that
+much better in excel) but how does it work as a stats tool. The first
+thing we should always do is look at a histogram of our data, in this
+case we are going to look at teachers net income (TeachNI) using a
+histogram and a box-plot.
+
+``` r
+attach(BigMac2003)
+hist(TeachNI, main="Teachers Net Income (in $1000's)")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+To change the number of bins in the histogram we run the code:
+
+``` r
+hist(TeachNI,breaks=15, main="Teachers Net Income (in $1000s)")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+In either plot we are seeing the the data has a long right tail. To do a
+box-plot we run the code:
+
+``` r
+boxplot(TeachNI, main="A boxplot of Teachers Net Income (in $1000s)")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+Now that we are able to visualize the data we can quickly calculate
+summary statistics that we need. The first thing we can do is quickly
+calculate the five number summaries for the entire data set at once. The
+function allows us to do that.
+
+``` r
+summary(BigMac2003)
+```
+
+    ##      BigMac           Bread            Rice         FoodIndex     
+    ##  Min.   : 10.00   Min.   : 6.00   Min.   : 5.00   Min.   : 23.50  
+    ##  1st Qu.: 16.00   1st Qu.:13.00   1st Qu.:12.00   1st Qu.: 41.20  
+    ##  Median : 25.00   Median :19.00   Median :16.00   Median : 62.60  
+    ##  Mean   : 37.28   Mean   :24.58   Mean   :19.94   Mean   : 61.93  
+    ##  3rd Qu.: 48.00   3rd Qu.:28.00   3rd Qu.:22.00   3rd Qu.: 75.30  
+    ##  Max.   :185.00   Max.   :90.00   Max.   :96.00   Max.   :129.40  
+    ##       Bus             Apt            TeachGI         TeachNI     
+    ##  Min.   :0.090   Min.   :  90.0   Min.   : 0.60   Min.   : 0.50  
+    ##  1st Qu.:0.360   1st Qu.: 320.0   1st Qu.: 4.10   1st Qu.: 3.40  
+    ##  Median :0.830   Median : 700.0   Median :17.80   Median :12.60  
+    ##  Mean   :1.041   Mean   : 713.9   Mean   :21.22   Mean   :15.78  
+    ##  3rd Qu.:1.490   3rd Qu.: 950.0   3rd Qu.:32.30   3rd Qu.:22.50  
+    ##  Max.   :3.700   Max.   :1930.0   Max.   :78.50   Max.   :57.60  
+    ##     TaxRate         TeachHours   
+    ##  Min.   :-7.317   Min.   :20.00  
+    ##  1st Qu.:15.000   1st Qu.:33.00  
+    ##  Median :21.739   Median :38.00  
+    ##  Mean   :21.482   Mean   :36.74  
+    ##  3rd Qu.:28.807   3rd Qu.:40.00  
+    ##  Max.   :42.353   Max.   :58.00
+
+If we want to find the mean of a specific variable we can do it
+directly.
+
+``` r
+mean(TeachNI)
+```
+
+    ## [1] 15.77826
+
+If we want to find the standard deviation of a variable we can again do
+it directly.
+
+``` r
+sd(TeachNI)
+```
+
+    ## [1] 14.07626
+
+And just for completeness the way we calculate the variance in R is the
+standard deviation squared.
+
+``` r
+sd(TeachNI)^2
+```
+
+    ## [1] 198.1411
+
+``` r
+var(TeachNI)
+```
+
+    ## [1] 198.1411
+
+### Calculating P-Values and Quantiles in R
+
+Summary statistics are great, and give us ideas about what is happening
+with our data, but at the end of it we will actually want to do some
+inference. We need to be able to calculate confidence intervals and
+report the results of hypothesis tests.  
+In some classes this is taught using charts or tables. For our purposes
+(since this is a review we are going to discuss calculating
+probabilities and quantiles from normal and t-distributions.
+
+Specifically, R allows us to approximate $P(X < x^*)$ for any value
+$x^*$ where $X \sim N(\mu,\sigma)$ using the function
+
+``` r
+pnorm(q, mean=0,sd=1,lower.tail=TRUE)
+qnorm(p,mean=0,sd=1,lower.tail=TRUE)
+```
+
+- q is the value of $x^*$
+- p is the probability we are searching for
+- mean is the mean value, the default is 0
+- sd is the standard deviation the default is 1
+- lower.tail is a TRUE or FALSE variable that wants to know if values
+  are above or below q, default is TRUE
+
+Lets say we have a random variable $X$ that is distributed $N(1,3)$
+(mean of 1, standard deviation of 3). We want to calculate the
+probability, using this distribution, that we would observe a value that
+falls above 5. To do this in R we will use the `pnorm` function. Now
+this is the first time we have seen a function with multiple
+*arguments*. Each time we need to specify values of `q`, `mean`, `sd`,
+and `lower.tail`. In reality we can leave all but `q` blank and the
+defaults will be used for the other values.
+
+To find the probability we are looking for let’s write it out in math
+$P(X>5)=P(X\geq 5)$. In this equation our distribution has `mean=1`,
+`sd=3`, and since we are looking for values greater than 5 we will be
+looking in the upper tail that means `lower.tail=FALSE`.
+
+``` r
+pnorm(5,mean=1,sd=3,lower.tail=FALSE)
+```
+
+    ## [1] 0.09121122
+
+Lets say we want to calculate the probability of observing a value below
+-2 for a standard normal distribution ($Z \sim N(0,1)$). That gives us
+$P(Z\leq -2)$.
+
+``` r
+pnorm(-2)
+```
+
+    ## [1] 0.02275013
+
+Now to calculate normal quantiles we just use the function where is the
+probability in the upper or lower tail. We want to know the quantile
+value that corresponds to .025 in the upper tail of a standard normal
+distribution. To write it out in math terms we have $P(X\geq x^*)=.025$,
+we want to solve for $x^*$. To do this use the code:
+
+``` r
+ qnorm(.025,mean=0,sd=1,lower.tail=FALSE)
+```
+
+    ## [1] 1.959964
+
+``` r
+ qnorm(.975,mean=0,sd=1)
+```
+
+    ## [1] 1.959964
+
+To calculate the probabilities and quantiles for a t-distribution we
+will us the functions
+
+``` r
+qt(p,df, lower.tail=TRUE)
+pt(q, df, lower.tail=TRUE)
+```
+
+where `df` are the number of degrees of freedom. Just like for the
+normal we will use `pt` for probabilities and `qt`.
+
+If we want to calculate the probability of observing a value from a
+$t_40$ (t-distribution with 40 degrees of freedom) that is above 2 we
+use the code:
+
+``` r
+pt(2,df=40,lower.tail=FALSE)
+```
+
+    ## [1] 0.02616117
+
+If we want to calculate the value of the t-distribution with 25 degrees
+of freedom that places .025 probability in the lower tail we run the
+code:
+
+``` r
+qt(.025,df=25,lower.tail=TRUE)
+```
+
+    ## [1] -2.059539
+
+Now these are the two basic distributions we will use. We will learn two
+more slightly more complex distributions this semester but for now this
+is really all we need as far as \`\` basic statistics”.
+
+We will cover more R as we go but if you understand this document (or
+most of it) then we have a good enough base to get started. R or any
+other statistical computational tools are just like anything else, the
+more repetitions you do the better off you will be.
+
+## Data in R
+
+When managing data in R it is important to understand the types of data
+R supports. The two most attributes of any data type are the mode and
+the class of the data. When problems arise with data most of the time it
+is because the data is in a incorrect mode or class for a particular
+operation or function. First let’s define an object as anything that is
+in R, that can be called. From functions to data sets, anything that is
+contained in R is an R object.
+
+The most common modes of R objects are numeric (numbers), characters
+(words or letters), logical (True or false) statements and functions
+(the object is a function). Different types of functions work on
+different type of modes, for instance some functions will only work on
+specific types of modes. For instance, can you take a mean of an object
+of mode type character? Of course not! So part of using data is
+understanding what type of data you have and how computers work with it.
+
+Classes are slightly different than the mode of an object. A class tells
+you how the object has been stored in R but also what functions it can
+interact with.
+
+Let’s look at a few examples:
+
+First let’s look at the number 2
+
+``` r
+class(2)
+```
+
+    ## [1] "numeric"
+
+``` r
+mode(2)
+```
+
+    ## [1] "numeric"
+
+Next the logical variable TRUE
+
+``` r
+class(TRUE)
+```
+
+    ## [1] "logical"
+
+``` r
+mode(TRUE)
+```
+
+    ## [1] "logical"
+
+For the character string Hello
+
+``` r
+class("Hello")
+```
+
+    ## [1] "character"
+
+``` r
+mode("Hello")
+```
+
+    ## [1] "character"
+
+Creating R objects Y and X. The objects on both sides of the assignment
+operator are R objects.
+
+``` r
+Y<-runif(10)
+X<-runif(10)
+```
+
+If we look at the R Object `Y` and the `mean` function of the object we
+see that
+
+``` r
+class(Y)
+```
+
+    ## [1] "numeric"
+
+``` r
+mode(Y)
+```
+
+    ## [1] "numeric"
+
+``` r
+class(mean(Y))
+```
+
+    ## [1] "numeric"
+
+But if Looking at the mean function by itself we have
+
+``` r
+mode(mean)
+```
+
+    ## [1] "function"
+
+To better understand classes lets look at the `lm` function, a function
+that we would use to run liner regression in R. When we look at the mode
+and class of the result we see.
+
+``` r
+mode(lm(Y~X))
+```
+
+    ## [1] "list"
+
+``` r
+class(lm(Y~X))
+```
+
+    ## [1] "lm"
+
+Notice we have an `lm` class, which means the output has a specific form
+that only `lm` models will have. Think of this as a list of a specific
+form of `lm`, this allows users to understand how to access elements of
+the output, and allows R to interact with it in specific ways. There are
+many types of classes, and most relate to certain packages or types of
+packages.
+
+### Data Types
+
+We have already seen many data types in R but just haven’t refereed to
+them in detail. The basics are
+
+- Numeric
+- Integer
+- Logical (True or False)
+- Character (words/ Factor)
+
+We can always check the type of our data by using the `str` function.
+
+``` r
+library(alr4)
+str(salary)
+```
+
+    ## 'data.frame':    52 obs. of  6 variables:
+    ##  $ degree: Factor w/ 2 levels "Masters","PhD": 1 1 1 1 2 1 2 1 2 2 ...
+    ##  $ rank  : Factor w/ 3 levels "Asst","Assoc",..: 3 3 3 3 3 3 3 3 3 3 ...
+    ##  $ sex   : Factor w/ 2 levels "Male","Female": 1 1 1 2 1 1 2 1 1 1 ...
+    ##  $ year  : int  25 13 10 7 19 16 0 16 13 13 ...
+    ##  $ ysdeg : int  35 22 23 27 30 21 32 18 30 31 ...
+    ##  $ salary: int  36350 35350 28200 26775 33696 28516 24900 31909 31850 32850 ...
+
+If we check that BigMac2003 data set we have
+
+``` r
+str(BigMac2003)
+```
+
+    ## 'data.frame':    69 obs. of  10 variables:
+    ##  $ BigMac    : int  16 21 19 50 22 15 16 93 54 18 ...
+    ##  $ Bread     : int  9 12 19 42 19 7 10 48 20 11 ...
+    ##  $ Rice      : int  9 19 9 25 10 7 16 16 28 12 ...
+    ##  $ FoodIndex : num  65.9 63.5 55.4 46.4 62.9 98.4 64.4 33.3 36.9 74.7 ...
+    ##  $ Bus       : num  2 0.61 1.57 0.47 0.91 2.34 2.21 0.32 0.36 1.5 ...
+    ##  $ Apt       : int  890 620 780 120 590 930 630 200 350 590 ...
+    ##  $ TeachGI   : num  34.3 19.5 22 4.2 25.5 78.5 45 4.1 4.1 30.6 ...
+    ##  $ TeachNI   : num  20.5 15.9 16.1 4 20.1 57.6 28.9 3.9 3.3 18.9 ...
+    ##  $ TaxRate   : num  40.23 18.46 26.82 4.76 21.18 ...
+    ##  $ TeachHours: int  39 29 40 35 39 35 36 41 40 24 ...
+
+Also we can always check things such as `is.numeric` or change the data
+type using `as.numeric`. Note this works for factor, logical, and the
+rest of the data types.
+
+Notice there is a difference between integers and numeric and then
+characters and factors.
+
+We also need to understand the different data storage types that are in
+R. The major ones we will focus on are
+
+- Matrices
+- Data frames
+- Lists
+- Vectors
+
+### Matrices
+
+These data storage types are what we will normally use in R. We just
+need to make sure we are using it correctly and understand the
+limitations and how to work with each of these things first thing we
+need to start with is matrices. Now you’ve probably done some linear
+algebra at some point in your background, matrices are what you will do
+these types of functions with. So lets generate a matrix and see the
+type of functions we can use are
+
+``` r
+## Generating a 3 by 3 matrix with integers 1 to 9, calling it A
+A<-matrix(1:9,nrow=3,ncol=3,byrow=TRUE)
+A
+```
+
+    ##      [,1] [,2] [,3]
+    ## [1,]    1    2    3
+    ## [2,]    4    5    6
+    ## [3,]    7    8    9
+
+``` r
+B<-matrix(1:9, nrow=3,ncol=3, byrow=FALSE)
+B
+```
+
+    ##      [,1] [,2] [,3]
+    ## [1,]    1    4    7
+    ## [2,]    2    5    8
+    ## [3,]    3    6    9
+
+We see the difference that the `byrow` command makes in creating these
+matrices. Now let’s check that this is a matrix (lets also check
+BigMac2003)
+
+``` r
+is.matrix(A)
+```
+
+    ## [1] TRUE
+
+``` r
+is.matrix(BigMac2003)
+```
+
+    ## [1] FALSE
+
+To transpose the matrix we do
+
+``` r
+t(A)
+```
+
+    ##      [,1] [,2] [,3]
+    ## [1,]    1    4    7
+    ## [2,]    2    5    8
+    ## [3,]    3    6    9
+
+To multiply two matrices together we do
+
+``` r
+A%*%A
+```
+
+    ##      [,1] [,2] [,3]
+    ## [1,]   30   36   42
+    ## [2,]   66   81   96
+    ## [3,]  102  126  150
+
+``` r
+## Note %*% is matrix multiplication and * is element wise multiplication
+```
+
+Addition and subtraction work element wise in R and are straight
+forward. Think of vectors as a single row or column element of a matrix.
+
+### Data Frame
+
+Data frames resemble matrices in R but do not function like them. The
+best way to check if something is a data frame is to use two commands
+`is.data.frame` or `names`. Since we know BigMac2003 isn’t a matrix we
+need to check if its a data frame. We do that by
+
+``` r
+is.data.frame(BigMac2003)
+```
+
+    ## [1] TRUE
+
+``` r
+names(BigMac2003)
+```
+
+    ##  [1] "BigMac"     "Bread"      "Rice"       "FoodIndex"  "Bus"       
+    ##  [6] "Apt"        "TeachGI"    "TeachNI"    "TaxRate"    "TeachHours"
+
+The names command shows us what we can call using the atomic operator
+(the dollar sign). For instance
+
+``` r
+BigMac2003$BigMac
+```
+
+    ##  [1]  16  21  19  50  22  15  16  93  54  18  79  43  45  76  10  16  22  15  15
+    ## [20]  16  19  13  36  67  33 132  84  25  55  79  33  39  16  10  17  15  21  24
+    ## [39]  62  75  10  21  14  30 112 185  12  18  19  42  48  43  26  52  33  28  30
+    ## [58]  21  31  19  19  18  49  31  10  14  15  62  44
+
+### Lists
+
+Lists maybe the most useful and robust data type we have. They can
+contain anything and everything and no problems will be found. For
+instance if I need a data type to contain multiple vectors of different
+lengths (different samples) or a description and the data we can use a
+list. To create a list we do
+
+``` r
+MyList<-list(A=1:9,B=2:5)
+MyList
+```
+
+    ## $A
+    ## [1] 1 2 3 4 5 6 7 8 9
+    ## 
+    ## $B
+    ## [1] 2 3 4 5
+
+To call the list we can do a few different things we can call it just
+like a data frame (which is a type of list)
+
+``` r
+names(MyList)
+```
+
+    ## [1] "A" "B"
+
+``` r
+MyList$A
+```
+
+    ## [1] 1 2 3 4 5 6 7 8 9
+
+``` r
+MyList[[1]]
+```
+
+    ## [1] 1 2 3 4 5 6 7 8 9
+
+The double brackets allow us to access list elements, and works very
+much like accessing elements in a vector. Lists are very useful when
+needing to store different data sets that are associated in some way.
+Most output of functions, that do more than simple calculations, in R is
+a list. We’ll learn later how to write functions and access the output.
+
+### Missing Values in R
+
+One of the most important and troubling pieces of working with data is
+working with missing data. What do you do when your data set is
+incomplete? How can you deal with it? How should you deal with it? As in
+everything else with data there is a difference between ideal and
+reality. Ideally we wouldn’t have missing data, we wouldn’t have
+problems to deal with. We first need to figure out how to identify these
+problems, first lets see what it looks like in R
+
+``` r
+Data<-data.frame(x1=c(1,3,NA,4,5), x2=c(NA,NA,"red","green","blue"))
+Data
+```
+
+    ##   x1    x2
+    ## 1  1  <NA>
+    ## 2  3  <NA>
+    ## 3 NA   red
+    ## 4  4 green
+    ## 5  5  blue
+
+In R `NA` will denote a missing value. Notice the difference when we
+have a character variable and a integer variable. We see the `<NA>` in
+the case of the character and just `NA` in the case of the integer. It
+is easy to see the missing values in this type of data set but what
+about when they aren’t so easy to see in a large data set how will we
+know they exist?
+
+The easiest way is to use the `is.na` function in R
+
+``` r
+is.na(Data$x1)
+```
+
+    ## [1] FALSE FALSE  TRUE FALSE FALSE
+
+``` r
+any(is.na(Data$x1))
+```
+
+    ## [1] TRUE
+
+The question is what do we do with the entire data set
+
+``` r
+is.na(Data)
+```
+
+    ##         x1    x2
+    ## [1,] FALSE  TRUE
+    ## [2,] FALSE  TRUE
+    ## [3,]  TRUE FALSE
+    ## [4,] FALSE FALSE
+    ## [5,] FALSE FALSE
+
+``` r
+any(is.na(Data))
+```
+
+    ## [1] TRUE
+
+This still doesn’t get us around what to do with it, how will it effect
+our functions, and what can we do to remove all the data points with
+`NA`. To remove all the data points with `NA` we use the function.
+
+``` r
+na.omit(Data$x1)
+```
+
+    ## [1] 1 3 4 5
+    ## attr(,"na.action")
+    ## [1] 3
+    ## attr(,"class")
+    ## [1] "omit"
+
+``` r
+na.omit(Data$x2)
+```
+
+    ## [1] "red"   "green" "blue" 
+    ## attr(,"na.action")
+    ## [1] 1 2
+    ## attr(,"class")
+    ## [1] "omit"
+
+``` r
+na.omit(Data)
+```
+
+    ##   x1    x2
+    ## 4  4 green
+    ## 5  5  blue
+
+Notice if we need both `x1` and `x2` to not have `NA` then we only have
+two observations, but individually we would get more. What about if we
+want to take the mean of `x1`? Would it work?
+
+``` r
+mean(Data$x1)
+```
+
+    ## [1] NA
+
+``` r
+mean(na.omit(Data$x1))
+```
+
+    ## [1] 3.25
+
+The answer is no, but if we omit the `NA`’s we get the mean. It is
+important to understand where your missing data is and how your code
+will react to it.
+
+## Random Number Generation in R
+
+### Why Generate Numbers Randomly
+
+In statistics we discuss and try to understand variation in our data.
+The hope is part of that variation can be explained by some factor or
+variable we already know, but once that is accounted for we still have
+randomness that needs understood. Randomly generating numbers (it is
+really pseudo random number generation) allows us to see what the
+randomness in our data looks like, and possibly give us a comparison for
+our method. Another reason to randomly generate data is to check to see
+if method we develop (or need to program) actually work. In almost every
+statistical paper you also see what we call \`\`proof by simulation”.
+This means we show that methods work when data comes from a certain
+statistical model or various statistical models, it also shows when they
+will not work.
+
+For us we really need to understand how to do three things (for right
+now)
+
+- Sample data points from an existing data set
+- Generate data from any distribution (conceptually)
+- Generate data from a normal distribution
+
+`sample` function
+
+Let’s say we want to randomly sample 5 numbers from the the numbers
+$\{1,2,3,\ldots,20\}$, and any number can only show up at most one time
+in the sample. How would we do this in `R` ? What is the mathematical
+question even?
+
+The mathematical question is where we start. We want to randomly sample
+5 numbers without replacement of the set $\[1,2,\ldots,20\}$, where each
+number is sampled with equal probability. Remember without replacement
+means once a number is selected it can not be selected again. To do this
+in R we use the `sample` function which has arguments of `x`, which is
+the set we want to sample, `size`, which is the number of point we want
+to return, and `replace` which is a logical statement (`TRUE` or
+`FALSE`) which that says whether to sample with or without replacement.
+We also need to set the seed, a seed is the argument that initializes
+the random number generator (or random sampling). By setting the seed we
+guarantee that our set of numbers and our results can be reproduced,
+this means if you know my seed and have my code you could reproduce my
+results. To answer our question we use the following code
+
+``` r
+set.seed(10)
+Out1<-sample(1:20,5,replace=FALSE)
+Out1
+```
+
+    ## [1] 11  9 10 16 12
+
+So why would we want to do something like this? There are certain
+methods such as bootstrapping and randomization testing that require us
+to sub sample our data. This method will be useful as we move forward.
+
+### Generating Data from a Probability Distribution
+
+Sometimes just sampling numbers 1 to 20 isn’t enough we need to be able
+to generate data from any type of probability distribution. The method
+we are going to learn is known as the Inverse CDF method.  
+If we want to generate data from any probability distribution than we
+need to understand the basic properties of any probability density
+function. The major property we need to use is that all probabilities
+are between 0 and 1. To be a little more rigorous. Define $X$ to be a
+random variable with probability density function (pdf) $g(X)$ and
+cumulative density function $G(X)$. Just as a reminder this means that
+
+So using this idea we only need to be able to generate data from a
+continuous uniform distribution and use that to generate a value that
+corresponds to a quantile in our distribution. So here is what our
+process looks like
+
+- Randomly generate a value from a uniform distribution with minimum 0
+  and maximum 1. Let’s call this value $p$.  
+- Find the quantile associated with $p$ using the probability
+  distribution of your choice think of this as $G^{-1}(p)$.
+
+For example if I wanted to do this in R and generate 10 data points from
+a $N(0,1)$ I would do the following
+
+``` r
+set.seed(10)
+M<-runif(10,0,1)
+M
+```
+
+    ##  [1] 0.50747820 0.30676851 0.42690767 0.69310208 0.08513597 0.22543662
+    ##  [7] 0.27453052 0.27230507 0.61582931 0.42967153
+
+``` r
+qnorm(M)
+```
+
+    ##  [1]  0.01874617 -0.50503107 -0.18425255  0.50466259 -1.37133055 -0.75396001
+    ##  [7] -0.59916772 -0.60585637  0.29454513 -0.17721050
+
+To do it in fewer steps we would do
+
+``` r
+set.seed(10)
+qnorm(runif(10,0,1))
+```
+
+    ##  [1]  0.01874617 -0.50503107 -0.18425255  0.50466259 -1.37133055 -0.75396001
+    ##  [7] -0.59916772 -0.60585637  0.29454513 -0.17721050
+
+So intuitively we could do this with any distribution. The good news is
+that the brand name distributions are already pre-programmed in R. So we
+don’t need to use the inverse CDF method in all cases. For instance if
+we want to generate 10 data points from a standard normal distribution
+($N(0,1)$ you may have heard this called the $Z$ distribution) in R we
+do
+
+``` r
+X<-rnorm(10)
+X
+```
+
+    ##  [1]  0.3897943 -1.2080762 -0.3636760 -1.6266727 -0.2564784  1.1017795
+    ##  [7]  0.7557815 -0.2382336  0.9874447  0.7413901
+
+Final thing to note is that you see the `set.seed` function in R, what
+this does is creates reproducible random numbers in R. Basically it
+starts your random number generator at a certain spot so you can produce
+the same random numbers at each spot for instance watch what happens
+when I do this.
+
+``` r
+set.seed(10)
+rnorm(2)
+```
+
+    ## [1]  0.01874617 -0.18425254
+
+``` r
+set.seed(11)
+rnorm(2)
+```
+
+    ## [1] -0.59103110  0.02659437
+
+``` r
+set.seed(10)
+rnorm(2)
+```
+
+    ## [1]  0.01874617 -0.18425254
+
+``` r
+rnorm(2)
+```
+
+    ## [1] -1.3713305 -0.5991677
+
+Any time we do any type of random number generation we should set our
+seed, for reproducibility purposes. Why is reporducibility so important?
+as you’ll see as we move forward most modern methods depend at some
+point on random number generation, so we need to make sure that we can
+obtain the same result. Also it gives us a way to test the sensitivity,
+if the results are the same across many different sets of random numbers
+the result is probably consistent. You’ll see this used all across your
+statistics and data mining courses, so it is important that you
+understand this fundamental concept.
+
+\##The Apply Functions
+
+In R we typically work with data frames, which we can think of as a list
+that reports like a matrix, or an excel file that you see. You can also
+think of it as multiple vectors where each element of the vector
+corresponds to the same observations in the data (i.e. The first data
+point in the first and second vector are describing an attribute of the
+same person). We have previously discussed simple ways of subsetting
+these observations and being able to look at rows, columns, and any
+combination individually. In data frames that are of substantial size
+though sometimes what we care about is a summary of the data (i.e. mean
+of each variable, standard deviation of each variable). We could also
+want to know about these same summary statistics of each subpopulation
+represented in the data we have. To do this in R we have a class of
+functions which are known as the apply functions. Here we will do a
+brief introduction to these functions and show you some quick examples.
+
+Again for simplicity we will use the `alr4` package, due to the vast
+amount of data the package contains.
+
+### `apply` Function}
+
+The `apply` function in R allows you to apply a function to the rows or
+columns of a matrix, in our case that would refer to the observations or
+variables. This can be useful for a lot of reasons to see one lets
+return to the BigMac2003 data set we have previously used.
+
+``` r
+library(alr4)
+data(BigMac2003)
+head(BigMac2003)
+```
+
+    ##           BigMac Bread Rice FoodIndex  Bus Apt TeachGI TeachNI TaxRate
+    ## Amsterdam     16     9    9      65.9 2.00 890    34.3    20.5 40.2332
+    ## Athens        21    12   19      63.5 0.61 620    19.5    15.9 18.4615
+    ## Auckland      19    19    9      55.4 1.57 780    22.0    16.1 26.8182
+    ## Bangkok       50    42   25      46.4 0.47 120     4.2     4.0  4.7619
+    ## Barcelona     22    19   10      62.9 0.91 590    25.5    20.1 21.1765
+    ## Basel         15     7    7      98.4 2.34 930    78.5    57.6 26.6242
+    ##           TeachHours
+    ## Amsterdam         39
+    ## Athens            29
+    ## Auckland          40
+    ## Bangkok           35
+    ## Barcelona         39
+    ## Basel             35
+
+There are certain variables that are in the same units that we could
+want to do some basic summary statistics on.  
+For instance we may want to compare the mean price of Bread, Rice, and
+BigMac. We can calculate this in multiple ways but for this discussion
+we will on focus on using the apply function. The use of the apply
+function looks like
+
+``` r
+apply(MyMatrix, index, function)
+```
+
+where
+
+- `MyMatrix` is your data matrix or data frame
+- `index` refers to either the columns or rows. This argument only
+  responds to 1 (rows) or 2 (columns). Think of this as a row by column
+  statement. We always say rows first and columns second.  
+- `function` refers to the function you want to apply to either the rows
+  or the columns. This can either be a pre-programmed (cookbook)
+  function in R OR you can write your own function to place here. Note
+  the argument of this function needs to be a data vector or the apply
+  function becomes more complex.
+
+Now to see how it applies to the BigMac2003 data we can use the code
+
+``` r
+apply(BigMac2003,2, mean)
+```
+
+    ##     BigMac      Bread       Rice  FoodIndex        Bus        Apt    TeachGI 
+    ##  37.275362  24.579710  19.942029  61.930435   1.041159 713.913043  21.220290 
+    ##    TeachNI    TaxRate TeachHours 
+    ##  15.778261  21.481858  36.739130
+
+Notice a few things about the code. The data set or matrix that we are
+using is BigMac2003, we wanted to mean of the variables which
+corresponds to index 2, and finally we are using the mean function
+(which is already in R.
+
+This gives all the mean of all variables there are two ways just to see
+the first 3 if we only want those. Both are basic subsetting techniques.
+We can either subset the data or subset the result such as
+
+``` r
+apply(BigMac2003[,1:3],2,mean)
+```
+
+    ##   BigMac    Bread     Rice 
+    ## 37.27536 24.57971 19.94203
+
+``` r
+apply(BigMac2003,2,mean)[1:3]
+```
+
+    ##   BigMac    Bread     Rice 
+    ## 37.27536 24.57971 19.94203
+
+In either case the result is the same. The speed of the code in this
+case isn’t an issue since this is a fairly small data set and mean is a
+very efficient function in R.
+
+### `tapply` Function}
+
+The `tapply` function is used to differentiate between existing
+sub-populations you can find in your data. Let’s say we want to
+understand the means of men and women in a marketing survey, or from a
+salary perspective (if you work in HR). To give an example of this lets
+look at the `salary` data. This data is salary data for professors at a
+small mid-western college. We want to understand a the mean in certain
+sub populations of this data. Loading and looking at the variables
+involved
+
+``` r
+data(salary)
+head(salary)
+```
+
+    ##    degree rank    sex year ysdeg salary
+    ## 1 Masters Prof   Male   25    35  36350
+    ## 2 Masters Prof   Male   13    22  35350
+    ## 3 Masters Prof   Male   10    23  28200
+    ## 4 Masters Prof Female    7    27  26775
+    ## 5     PhD Prof   Male   19    30  33696
+    ## 6 Masters Prof   Male   16    21  28516
+
+One of the things we could be interested in is pay differential between
+males and females. The easiest way to do this is use the `tapply`
+function. The use of the `tapply` function is
+
+``` r
+tapply(data, variable, function)
+```
+
+where
+
+- data is the variable you are interested in calculating
+- variable is the variable you wish to subset on
+- function is the function you want applied to the data
+
+To look use this on our data we want to look at the salary difference
+between males and females. To do that we use the code
+
+``` r
+tapply(salary$salary, salary$sex, mean)
+```
+
+    ##     Male   Female 
+    ## 24696.79 21357.14
+
+Now lets say we wanted to look at a comparison of the distribution of
+the data for each of these sub populations we would do
+
+``` r
+tapply(salary$salary, salary$sex, summary)
+```
+
+    ## $Male
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   16094   20606   24746   24697   28200   36350 
+    ## 
+    ## $Female
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   15000   16827   20495   21357   24288   38045
+
+Another function we may want to use is `split` which will split the
+variable into two different data sets (a list which will will talk about
+in a different section). For instance if we want to split the data set
+for analysis based on gender (for simplicity we will only do salary) we
+would do
+
+``` r
+split(salary$salary, salary$sex)
+```
+
+    ## $Male
+    ##  [1] 36350 35350 28200 33696 28516 31909 31850 32850 27025 24750 28200 23712
+    ## [13] 25748 29342 31114 24742 22906 24450 19175 20525 27959 24832 25400 24800
+    ## [25] 26182 23725 23300 23713 20850 17095 16700 17600 18075 18000 20999 16500
+    ## [37] 16094 16244
+    ## 
+    ## $Female
+    ##  [1] 26775 24900 38045 25500 21600 20690 22450 18304 17250 16150 15350 16686
+    ## [13] 15000 20300
+
+We can see this splits the data set into salaries for males and salaries
+for females.
+
+The last of the apply functions we will talk about for the moment is the
+`lapply` function. It allows you to apply a function to elements of
+lists. So for instance if we want the mean of each element of our
+created list we use the code
+
+``` r
+lapply(MyList,mean)
+```
+
+    ## $A
+    ## [1] 5
+    ## 
+    ## $B
+    ## [1] 3.5
+
+``` r
+sapply(MyList,mean)
+```
+
+    ##   A   B 
+    ## 5.0 3.5
+
+Notice `lapply` returns a list, while sapply returns a vector. This is
+where understanding what you’re dealing with inside of the programming
+language matters.
+
+You’ll need to have all of this to work through the computational
+methods we will discuss.
+
+## `for`, `if`, `while` Statements
+
+Up to this point we have just accessed data, and understand the data
+types we want. What if we want to design a matrix with a specific
+structure. For instance if we want to create what is known as an Auto
+Regressive 1 correlation structure denoted as $AR_\rho(1)$ the $i,j$th
+element of the matrix we need to use a for loop. Just as in any
+programming language for works when you have a fixed amount of
+iterations that you know you need (i.e. a matrix). Lets say we want to
+know the sum of the numbers 1 to 20. We can do it simply in a for
+loop.  
+*NOTE R starts indexing at 1 not 0 like some other languages*
+
+``` r
+## Intializing a sum counter
+Sum=0
+for(i in 1:20){
+Sum=Sum+i
+}
+Sum
+```
+
+    ## [1] 210
+
+``` r
+## Another way to do this
+sum(1:20)
+```
+
+    ## [1] 210
+
+What this code does is for each integer between (and including) 1 to 20
+it adds it together.
+
+The `while` statement does something slightly different it can be used
+when you know when you need your algorithm to stop but you don’t know
+exactly how to do it. Let’s say we want to stop a statement when our sum
+exceeds 100, but we aren’t sure how many iterations that takes. We set
+up the code like this
+
+``` r
+Sum=0
+iter=0
+while(Sum<100){
+iter=iter+1
+Sum=Sum+iter
+}
+Sum
+```
+
+    ## [1] 105
+
+``` r
+iter
+```
+
+    ## [1] 14
+
+Notice we can see how many iterations of our algorithm it took to get to
+exceed 100, and check what the sum came out too.
+
+While looks can be thought of as \`\` do this WHILE this (my termination
+statement) is true/false”. An if statement can be thought as of one pass
+of a while loop, if this statement is true do this if it isn’t don’t do
+anything. For instance
+
+``` r
+Sum=0
+if(Sum==0){
+Sum=1000
+iter=1
+}
+Sum
+```
+
+    ## [1] 1000
+
+``` r
+iter
+```
+
+    ## [1] 1
+
+If we run the same code but turn it to not equal we have
+
+``` r
+Sum=0
+if(Sum!=0){
+Sum=1000
+iter=1
+}
+Sum
+```
+
+    ## [1] 0
+
+``` r
+iter
+```
+
+    ## [1] 1
+
+Note that `==` indicates logical equality, `!=` is logical inequality,
+greater than or equal to `>=`, greater `>`, less than `<`, less than or
+equal to `<=`.
+
+A few other things you should know `&` represent and conditional
+statements. For an OR conditional statement we use`|`. It works
+comparing a single statement or entire vectors.
+
+``` r
+((-2)>=0 & (2)<=0)
+```
+
+    ## [1] FALSE
+
+``` r
+((-2:2)>=0 & (-2:2)<=0)
+```
+
+    ## [1] FALSE FALSE  TRUE FALSE FALSE
+
+### Introduction to the Tidyverse and the Pipe Operator
+
+Now that we understand some of the basics in R let’s start looking at
+some of the modern developments in R. The “Tidyverse” as it is known are
+a set of packages that allow for a more simplistic workflow. One of the
+main operators we’re going to look at in this case ins the `%>%`
+operator which is known as the pipe operator, also known as the forward
+pipe operator. What this operator does is take the proceeding element
+and feed into the following function. Let’s take a look at something
+very simple you learned in a previous section:
+
+``` r
+library(alr4)
+```
+
+    ## Loading required package: car
+
+    ## Loading required package: carData
+
+    ## Loading required package: effects
+
+    ## lattice theme set by effectsTheme()
+    ## See ?effectsTheme for details.
+
+``` r
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following object is masked from 'package:car':
+    ## 
+    ##     recode
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+BigMac2003%>%head()
+```
+
+    ##           BigMac Bread Rice FoodIndex  Bus Apt TeachGI TeachNI TaxRate
+    ## Amsterdam     16     9    9      65.9 2.00 890    34.3    20.5 40.2332
+    ## Athens        21    12   19      63.5 0.61 620    19.5    15.9 18.4615
+    ## Auckland      19    19    9      55.4 1.57 780    22.0    16.1 26.8182
+    ## Bangkok       50    42   25      46.4 0.47 120     4.2     4.0  4.7619
+    ## Barcelona     22    19   10      62.9 0.91 590    25.5    20.1 21.1765
+    ## Basel         15     7    7      98.4 2.34 930    78.5    57.6 26.6242
+    ##           TeachHours
+    ## Amsterdam         39
+    ## Athens            29
+    ## Auckland          40
+    ## Bangkok           35
+    ## Barcelona         39
+    ## Basel             35
+
+The way we can think about this result is that it’s the same as saying
+`head(BigMac2003)`. It doesn’t seem like it’s going to save us much, but
+it turns out that when we are sub-setting, or working through larger
+workflows it can actually simplify what we are doing.
+
+Let’s take a look at new data set here just to get a feel for some
+functionality of the `dplyr` package, which is a BIG part of the
+tidyverse, and is a major package used for data manipulation.
+
+``` r
+iris%>%head()
+```
+
+    ##   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+    ## 1          5.1         3.5          1.4         0.2  setosa
+    ## 2          4.9         3.0          1.4         0.2  setosa
+    ## 3          4.7         3.2          1.3         0.2  setosa
+    ## 4          4.6         3.1          1.5         0.2  setosa
+    ## 5          5.0         3.6          1.4         0.2  setosa
+    ## 6          5.4         3.9          1.7         0.4  setosa
+
+``` r
+iris%>%dim()
+```
+
+    ## [1] 150   5
+
+#### `dplyr`: `filter`
+
+Next let’s look and the filter function. The first argument of the
+`filter` function is what data frame we want to filter, and if we’re
+using pipes, that will be what is passed by the pipes. So the second
+argument is the name of the variable and how we want it filtered. So
+think of it this way.
+
+``` r
+filter(data frame, variable1 condition)
+```
+
+Now let’s look at an example and I’m going to use a pipe to pass the
+data frame so we only need to focus on the variable and the condition. I
+want to filter the data so we are only looking at setosa’s.
+
+``` r
+seosta_only=iris%>% filter(Species=="setosa")
+seosta_only
+```
+
+    ##    Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+    ## 1           5.1         3.5          1.4         0.2  setosa
+    ## 2           4.9         3.0          1.4         0.2  setosa
+    ## 3           4.7         3.2          1.3         0.2  setosa
+    ## 4           4.6         3.1          1.5         0.2  setosa
+    ## 5           5.0         3.6          1.4         0.2  setosa
+    ## 6           5.4         3.9          1.7         0.4  setosa
+    ## 7           4.6         3.4          1.4         0.3  setosa
+    ## 8           5.0         3.4          1.5         0.2  setosa
+    ## 9           4.4         2.9          1.4         0.2  setosa
+    ## 10          4.9         3.1          1.5         0.1  setosa
+    ## 11          5.4         3.7          1.5         0.2  setosa
+    ## 12          4.8         3.4          1.6         0.2  setosa
+    ## 13          4.8         3.0          1.4         0.1  setosa
+    ## 14          4.3         3.0          1.1         0.1  setosa
+    ## 15          5.8         4.0          1.2         0.2  setosa
+    ## 16          5.7         4.4          1.5         0.4  setosa
+    ## 17          5.4         3.9          1.3         0.4  setosa
+    ## 18          5.1         3.5          1.4         0.3  setosa
+    ## 19          5.7         3.8          1.7         0.3  setosa
+    ## 20          5.1         3.8          1.5         0.3  setosa
+    ## 21          5.4         3.4          1.7         0.2  setosa
+    ## 22          5.1         3.7          1.5         0.4  setosa
+    ## 23          4.6         3.6          1.0         0.2  setosa
+    ## 24          5.1         3.3          1.7         0.5  setosa
+    ## 25          4.8         3.4          1.9         0.2  setosa
+    ## 26          5.0         3.0          1.6         0.2  setosa
+    ## 27          5.0         3.4          1.6         0.4  setosa
+    ## 28          5.2         3.5          1.5         0.2  setosa
+    ## 29          5.2         3.4          1.4         0.2  setosa
+    ## 30          4.7         3.2          1.6         0.2  setosa
+    ## 31          4.8         3.1          1.6         0.2  setosa
+    ## 32          5.4         3.4          1.5         0.4  setosa
+    ## 33          5.2         4.1          1.5         0.1  setosa
+    ## 34          5.5         4.2          1.4         0.2  setosa
+    ## 35          4.9         3.1          1.5         0.2  setosa
+    ## 36          5.0         3.2          1.2         0.2  setosa
+    ## 37          5.5         3.5          1.3         0.2  setosa
+    ## 38          4.9         3.6          1.4         0.1  setosa
+    ## 39          4.4         3.0          1.3         0.2  setosa
+    ## 40          5.1         3.4          1.5         0.2  setosa
+    ## 41          5.0         3.5          1.3         0.3  setosa
+    ## 42          4.5         2.3          1.3         0.3  setosa
+    ## 43          4.4         3.2          1.3         0.2  setosa
+    ## 44          5.0         3.5          1.6         0.6  setosa
+    ## 45          5.1         3.8          1.9         0.4  setosa
+    ## 46          4.8         3.0          1.4         0.3  setosa
+    ## 47          5.1         3.8          1.6         0.2  setosa
+    ## 48          4.6         3.2          1.4         0.2  setosa
+    ## 49          5.3         3.7          1.5         0.2  setosa
+    ## 50          5.0         3.3          1.4         0.2  setosa
+
+Next let’s look at an example where we want to filter a continuous
+variable like Petal.Length
+
+``` r
+long_petals=iris%>% filter(Petal.Length>1.5)
+head(long_petals)
+```
+
+    ##   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+    ## 1          5.4         3.9          1.7         0.4  setosa
+    ## 2          4.8         3.4          1.6         0.2  setosa
+    ## 3          5.7         3.8          1.7         0.3  setosa
+    ## 4          5.4         3.4          1.7         0.2  setosa
+    ## 5          5.1         3.3          1.7         0.5  setosa
+    ## 6          4.8         3.4          1.9         0.2  setosa
+
+#### `dplyr`:`select`
+
+The `select` function allows us to subset a set of variables from the
+data frame. Think of this as doing a column reduction of the data set by
+name. So the function sets up nicely as
+
+``` r
+select(data frame, varaible1, variable2, ....)
+```
+
+Now let’s just select the sepal variable from the iris data set.
+
+``` r
+subs=iris%>% select(Sepal.Length,Sepal.Width)
+head(subs)
+```
+
+    ##   Sepal.Length Sepal.Width
+    ## 1          5.1         3.5
+    ## 2          4.9         3.0
+    ## 3          4.7         3.2
+    ## 4          4.6         3.1
+    ## 5          5.0         3.6
+    ## 6          5.4         3.9
+
+##### `dplyr`:`group_by`
+
+The `group_by` function just orders data by a factor, so below we just
+want to order our data by `Species`.
+
+``` r
+keep=iris%>%group_by(Species)
+head(keep)
+```
+
+    ## # A tibble: 6 × 5
+    ## # Groups:   Species [1]
+    ##   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+    ##          <dbl>       <dbl>        <dbl>       <dbl> <fct>  
+    ## 1          5.1         3.5          1.4         0.2 setosa 
+    ## 2          4.9         3            1.4         0.2 setosa 
+    ## 3          4.7         3.2          1.3         0.2 setosa 
+    ## 4          4.6         3.1          1.5         0.2 setosa 
+    ## 5          5           3.6          1.4         0.2 setosa 
+    ## 6          5.4         3.9          1.7         0.4 setosa
+
+#### `dplyr`:`arrange`
+
+The `arrange` function is another way to order a continuous variables,
+this time we’ll choose to do it in descending order
+
+``` r
+me=iris%>% arrange(desc(Petal.Length))
+head(me)
+```
+
+    ##   Sepal.Length Sepal.Width Petal.Length Petal.Width   Species
+    ## 1          7.7         2.6          6.9         2.3 virginica
+    ## 2          7.7         3.8          6.7         2.2 virginica
+    ## 3          7.7         2.8          6.7         2.0 virginica
+    ## 4          7.6         3.0          6.6         2.1 virginica
+    ## 5          7.9         3.8          6.4         2.0 virginica
+    ## 6          7.3         2.9          6.3         1.8 virginica
+
+#### `dplyr`:`summarise`
+
+The `summarize` function allows you to create summary statistics of each
+of these variables. In this case we want to count each species and then
+return each sepal length.
+
+``` r
+m2<-iris%>%group_by(Species)%>% summarise(
+  n=n(),
+  mean_s_length=mean(Sepal.Length)
+)
+m2
+```
+
+    ## # A tibble: 3 × 3
+    ##   Species        n mean_s_length
+    ##   <fct>      <int>         <dbl>
+    ## 1 setosa        50          5.01
+    ## 2 versicolor    50          5.94
+    ## 3 virginica     50          6.59
+
+Right now your head my be spinning a little and that is ok. There are
+many options in R, and many ways to do the same things. The important
+part is to know where to start and that is what we have done here. We’ve
+started to lay the foundations for you to know how to learn R and where
+to begin your journey. Notice we can use any of these anytime.
+
+## Bootstrap
+
+Statistical inference the process of drawing conclusions about the
+entire population based on the information in the sample. The whole
+ideas is we want to use statistics from our sample to make estimates
+(and draw conclusions) about parameters from our population. Statistical
+inference has two common components, confidence intervals, and
+hypothesis tests. To understand how to use bootstrap and randomization
+testing methods, we first need to really understand what is statistical
+inference and some of the definitions that come with it. Below are some
+examples.
+
+- Sample Mean $\rightarrow$ True Mean
+- Sample Sd $\rightarrow$ True Sd
+- Sample Min $\rightarrow$ True Minimum
+- Sample Max $\rightarrow$ True Max
+- Sample Regression Line $\rightarrow$ True Mean Function
+
+### Parameter
+
+Parameters are fixed values (there is only one population mean) that are
+unknown in practial settings. The whole idea is we want to use a sample
+statistic, (sample mean, sample standard deviation) to talk about the
+population parameters. We have to imagine our data comes from a
+distribution with a fixed parameter, think a normal distribution with
+mean of 3, and our data, the stuff we actually observe, is sampled from
+this distribution so we know that our sample statistic with vary from
+sample to sample. Think about if you go out and give an online survey
+(possibly the worst kind of survey) and you spread it over social media
+on Monday then close it, and then give it again the next Monday at the
+same time etc. We could think of this data as coming from the same
+population, but we would expect that the numbers that we’d obtain from
+the sample data would be different. If the data isn’t highly variable
+they should be close to one another but having the exact same sample
+statistics would be unlikely. This idea leads to the thought process
+behind sampling distributions.
+
+### Sampling Distribution
+
+The *sampling distribution is the distribution of how the sample
+statistic varies from sample to sample*, it depends on the true
+parameter and the sample size. As sample size increases our precision
+will increase and distribution will close in on the true parameter
+value. This is the whole idea of the law of large numbers (LLN). *LLN
+says that the more data we have the better estimate we get*. Let’s take
+a second to discuss/think about this, let’s say a population has 1000
+possible data points we could sample in it, so the population size is
+1000, we take multiple samples of 900, we wouldn’t think that the
+samples would vary that much, because AT MOST we are only adding 100 new
+data points in the second sample that we didn’t have in the first. What
+if we only had 50 observations in each sample, then the variation we
+could see would change sample to sample. The idea is that this
+distribution doesn’t have fixed properties, and it changes based on your
+sample size. Think about what this means with the rise of “big data”, if
+sampling distributions (what inference depends on) depend on sample size
+how does big data play into this. More on this later.
+
+We define a *point estimate as a single estimate for a parameter*. This
+is the number that you get from your sample statistic from your data,
+remember an estimator is the equation we use, it becomes an estimate
+once we plug the data in and get a single number. One of the simplest
+example you can think of is that we can randomly select 100 residents of
+USA and find their average income is \$40,000. Then our point estimate
+for the average income of an USA resident is \$40,000.
+
+Is it enough just to talk about the sample statistic? In reporting
+cultures (old school analytics) this is what people do, they come up
+with a single estimate and run with it. In today’s world this really
+isn’t sufficient, but my guess is you what more information than me just
+saying that. So let me put you in a situation that I’ve been put in. I
+want you to predict the sales (to the dollar) that a multinational will
+have on the books by end of year, and to make things “easy” I’m asking
+you to do this in June, so you know half of the year already. Let’s take
+it one step further and say this is your first project for the
+organization, which means you need to show off your skills and add
+credibility. Are you willing to put your reputation/job on the line for
+a point estimate, a single number, or would you rather be able to give a
+range of numbers that you could be confident in. In reality this is why
+we give intervals. We need to report a confidence interval which has the
+general form of
+
+point estimate $\pm$ margin of error
+
+The margin of error reflects the uncertainty of the point estimate, and
+has a connection to the sampling distribution, because it gives us a
+feel for the randomness that the point estimate comes with.
+
+### Bootstrapping
+
+The idea has always been that we have CLT’s to define sampling
+distributions theoretically, which is probably what you’ve discussed in
+previous stats classes and what we discussed in the bootcamp.  
+In theory (as the sample size gets bigger) our sampling distributions
+approach the CLT, that’s the main idea of this entire thing, but we’re
+not talking about theory we’re talking about we’re talking about
+practice. So is there a way to use the sample we collected to get an
+idea what the sampling distribution is? The answer is yes and the
+methodology we use is called *bootstrap*.
+
+You know from previous discussions that the sampling distribution of
+statistic could be found if you would go out and collect multiple
+samples from the same population and report the sample statistic, and
+then evaluate the distribution. Again theoretically this would allow us
+to look at everything we need to, but what are the problems with it.
+Well let’s say it takes 4 days and thousands of dollars for a call
+center to collect 200 respondents to a survey, do you really want to
+spend money and time to collect the 100 more samples you would need? It
+would be very time consuming and costly, but the question is what do you
+do?
+
+In real life you can only collect one sample. So how can you determine
+the distribution of the sample statistic? *Use your sample*.
+
+- If your sample was random. It should be a reasonable representation of
+  the population distribution.
+- We can then re-sample from your sample to create a sampling
+  distribution.
+- Idea is treat our sample like it represents the population.
+
+### How to Bootstrap
+
+We are interested in estimating some parameter $\theta$ (say $\mu$ for
+example) and use our sample to get an estimate $\hat{\theta}$ (or
+$\bar{x}$ to estimate $\mu$). However we want more than a point
+estimate. We want to create a confidence interval for reasonable values
+of $\theta$.
+
+We will use the bootstrap method. First decide how many bootstrap
+samples you want to do. The more the better and computing has made this
+easy. Let $n$ be the size of our original sample size and let $k$ be the
+number of bootstraps we want to do.
+
+1.  Re-sample $n$ data points with replacement from the original sample.
+2.  With your new sample calculate a new sample statistic for each
+    bootstrap sample.
+3.  Repeat $k$ times until you have $k$ bootstrap statistics.
+
+Now you have a list of bootstrap estimates
+
+$$
+B_{\mbox{List}} = \left( B_1, ...., B_k\right) \mbox{ or re-order to get} \\
+B_{\mbox{Ordered List}} = \left( B_{(1)},..., B_{(k)}\right),
+$$ where $B_{(1)}$ is the minimum and $B_{(k)}$ is the maximum of the
+statistics.  
+Note this whole procedure depends on your original sample and the
+statistic you’re trying to bootstrap. Simple problem k = 10,000 takes a
+couple of seconds. Complicated problem k = 1,000 takes a day.
+
+### After the bootstrap
+
+After we’ve obtained the bootstrap distribution we should plot it to see
+if the distribution looks smooth, that is there aren’t big gaps in the
+histogram, or density curve. From there it is easy enough to create
+confidence intervals. There are two ways to do this. The first is just
+to pull the quantiles from the sampling distribution you created, the
+second is to use the bootstrap standard error, standard deviation of the
+bootstrap sampling distribution, and create a confidence interval using
+the point estimate.
+
+If the interval is bell shaped, both will produce similar results, if
+it’s not bell shaped we know we should us the quantiles rather than the
+standard formulation.
+
+Some notes about bootstrap:
+
+- Requires computing: we will talk more about how to do this in R. Now
+  you see why we spent most of this section discussing computing.
+- Original estimate should be in the center of your bootstrap sample. If
+  not there is probably a coding error.
+- Bootstrap is better for small $n$ problems but does not solve them and
+  should be treated with some caution.
+- Bootstrap depends on sample. +Sample biased then bootstrap results
+  biased.
+  - Sample is bad then bootstrap inference will be bad.
+
+### Correct Interpretation
+
+Let’s say we want to do a 95% CI.
+
+- The method I used, including the data collection, will capture the
+  population parameter 95% of the time.
+- Usually this statement is used: I am 95% confident the interval
+  contains the population parameter.
+
+### Atlanta Commute Example
+
+*CommuteAtlanta* is a data set about the commute time for Atlanta. Say
+we are interested in relocating to a specific site in Atlanta, and we
+want to find the average commute time for someone in Atlanta to
+understand employee productivity. Load the data
+
+``` r
+atl <- read.csv("https://www.lock5stat.com/datasets1e/CommuteAtlanta.csv")
+head(atl)
+```
+
+    ##      City Age Distance Time Sex
+    ## 1 Atlanta  19       10   15   M
+    ## 2 Atlanta  55       45   60   M
+    ## 3 Atlanta  48       12   45   M
+    ## 4 Atlanta  45        4   10   F
+    ## 5 Atlanta  48       15   30   F
+    ## 6 Atlanta  43       33   60   M
+
+Let’s take a look at a few visuals just to get a feel of whats happening
+here.
+
+``` r
+hist(atl$Time, main="Histogram of Atl Commute Times")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-76-1.png)<!-- -->
+
+``` r
+boxplot(atl$Time, main="Boxplot of Atl Commute Times")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-76-2.png)<!-- -->
+
+No we’re going to create the bootstrap sampling distribution. The idea
+is we resample and then calculate the mean directly, then store it in a
+vector called `boots`. Notice that we initialize `boots` as `NULL`, this
+allows us to create the object for storage, but leaves it empty. R knows
+it’s there and something we can call directly, but it’s just empty.
+We’ll run a bootstrap example
+
+``` r
+set.seed(2016)
+atlTime <- atl$Time
+mean(atlTime)
+```
+
+    ## [1] 29.11
+
+``` r
+sd(atlTime)
+```
+
+    ## [1] 20.71831
+
+``` r
+length(atlTime)
+```
+
+    ## [1] 500
+
+``` r
+boots <- NULL
+for(i in 1:10000){
+  meanAtl <- mean( sample(atlTime, 500, replace=TRUE))
+  boots <- c(boots, meanAtl)  
+}
+hist(boots, main="Sample Distribution for Mean Atlanta Commute Time")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-77-1.png)<!-- -->
+
+Looks symmetric so we’ll use both intervals anyways.
+
+``` r
+quantile(boots, c(.025,.975))
+```
+
+    ##     2.5%    97.5% 
+    ## 27.36200 30.96605
+
+``` r
+mean(atlTime) + 2*c(-sd(boots), sd(boots))
+```
+
+    ## [1] 27.27328 30.94672
+
+``` r
+mean(boots)
+```
+
+    ## [1] 29.11034
+
+``` r
+sd(boots)
+```
+
+    ## [1] 0.9183605
+
+How do we interpret these intervals, what does it say about the commute
+time? Is this interval on the commute times or the mean commute time?
+
+### Removing Outliers
+
+For sensitivity analysis purposes let’s say we only want to look at
+commute times under 90 minuets. Let’s see if anything changes
+
+``` r
+atlQuicker <- subset(atl, Time <= 90)
+atlQuickTimes <- atlQuicker$Time
+mean(atlQuickTimes)
+```
+
+    ## [1] 27.94747
+
+``` r
+sd(atlQuickTimes)
+```
+
+    ## [1] 17.00825
+
+``` r
+length(atlQuickTimes)
+```
+
+    ## [1] 495
+
+Lets look at the data again:
+
+``` r
+hist(atlQuickTimes, main="Histogram of Times <= 90 Minutes")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-80-1.png)<!-- -->
+
+``` r
+boxplot(atlQuickTimes, main="Boxplot of Times <= 90 Minutes")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-80-2.png)<!-- --> Now
+lets do the bootstrap approach
+
+``` r
+set.seed(2016)
+boots <- NULL
+for(i in 1:10000){
+  meanQuickAtl <- mean( sample(atlQuickTimes, 495, replace=TRUE))
+  boots <- c(boots, meanQuickAtl)  
+}
+hist(boots, main="Sample Distribution for Mean Commute for times <= 90 Minutes")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
+
+Finally let’s create the intervals
+
+``` r
+quantile(boots, c(.025,.975))
+```
+
+    ##     2.5%    97.5% 
+    ## 26.45859 29.48283
+
+``` r
+mean(atlQuickTimes) + 2*c(-sd(boots), sd(boots))
+```
+
+    ## [1] 26.40599 29.48895
+
+``` r
+mean(boots)
+```
+
+    ## [1] 27.94338
+
+``` r
+sd(boots)
+```
+
+    ## [1] 0.7707401
+
+### Comparing Two Sample Statistics
+
+Here we will actually looking at comparing the difference between two
+sample means but the same idea can be generalized to other statistics.
+
+*CommuteAtlanta* and *CommuteStLouis* are data sets about the commute
+time for these two cities. Say we are interested in finding the
+difference between the average commute times for the two cites. Our
+point estimate would be $\bar{x}_{atl} - \bar{x}_{stl}$ and we can use
+bootstrapping to create a confidence interval for the difference.
+
+``` r
+set.seed(2016)
+atl <- read.csv("https://www.lock5stat.com/datasets1e/CommuteAtlanta.csv")
+stl <- read.csv("http://www.lock5stat.com/datasets1e/CommuteSt.Louis.csv")
+
+atlTime <- atl$Time
+stlTime <- stl$Time
+
+boots <- NULL
+for(i in 1:10000){
+  meanAtl <- mean( sample(atlTime, 500, replace=TRUE))
+  meanStl <- mean( sample(stlTime, 500, replace=TRUE))
+  boots <- c(boots, meanAtl - meanStl)  
+}
+hist(boots, main="Sample Distribution for meanAtl - meanStl")
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-83-1.png)<!-- -->
+
+``` r
+quantile(boots, c(.025,.975))
+```
+
+    ##    2.5%   97.5% 
+    ## 4.97200 9.40205
+
+``` r
+(mean(atlTime) - mean(stlTime) ) + 2*c(-sd(boots), sd(boots))
+```
+
+    ## [1] 4.859005 9.420995
+
+The two intervals are close. Usually we want the two intervals to be
+close and if they are not more advanced bootstrapping techniques maybe
+necessary.
+
+In this case the two samples were both 500 while this is preferred this
+does not always have to be the case.
+
+What is our interpretation of the confidence interval?
+
+Lets say we want to compare the difference in the averages of SAT scores
+for men and women.
+
+``` r
+survey <- read.csv("http://www.lock5stat.com/datasets1e/StudentSurvey.csv")
+males <- subset(survey, Gender == "M")
+females <- subset(survey, Gender == "F")
+
+dim(males)
+```
+
+    ## [1] 193  17
+
+``` r
+dim(females)
+```
+
+    ## [1] 169  17
+
+``` r
+boots <- NULL
+for(i in 1:10000){
+  maleAvg <- mean( sample(males$SAT, 193, replace=TRUE))
+  femaleAvg <- mean(sample (females$SAT, 169, replace=TRUE))
+  boots <- c(boots, maleAvg - femaleAvg)
+}
+hist(boots)
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-84-1.png)<!-- -->
+
+``` r
+quantile(boots, c(.025,.975))
+```
+
+    ##      2.5%     97.5% 
+    ## -6.383986 44.388681
+
+``` r
+(mean(males$SAT) - mean(females$SAT) ) + 2*c(-sd(boots), sd(boots))
+```
+
+    ## [1] -6.842499 44.909826
+
+Before you create a confidence interval using a bootstrap interval you
+need to check the bootstrap distribution. The bootstrap distribution
+needs to be reasonably centered around the original point estimate. Here
+is an example looking at the median of a sample of 25 Mustangs cars
+being sold online.
+
+``` r
+dat <- read.csv("http://www.lock5stat.com/datasets1e/MustangPrice.csv")
+prices <- dat$Price
+
+boots <- NULL
+for(i in 1:10000){
+  stat <- median(sample(prices,25, replace=TRUE))
+  boots <- c(boots, stat)
+}
+hist(boots, main="Bootstrap of Median Prices")
+abline(v=median(prices), col="red", lwd=2)
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-85-1.png)<!-- -->
+
+You want your bootstrap distribution to be reasonably symmetric around
+your original estimate. Also we want our sampling distribution to be
+“filled out”. It should resemble the distribution of a continuous
+variable. For sample statistics like the median typically a “smooth”
+bootstrap is done. In a module later in this course, we will discuss
+other types of bootstrap methods that are computationally complex.
+
+## Randomized Distributons
+
+Randomized distributions are the hypothesis test version of
+bootstrapping. Again everything goes back to the creation of a sampling
+distribution, in this case we refer to it as a null distribution. The
+entire goal is to simulate the null distribution so that we can see how
+our data relates to that distribution.
+
+## Hypotheses Testing
+
+$$
+H_0: \mbox{Null Hypothesis: Claim that there is no effect or difference (simple model, always has the equal sign, could be equal, greater than equal or less than equal)} \\
+H_A: \mbox{Alternative Hypothesis: Claim for which we seek evidence (complex model)}
+$$
+
+Lets look at a quick example, let’s say that a friend claims to be able
+to predict whether a stock will go up or down on a daily basis. We would
+evaluate that as they can pick better than 50% of the time. The idea is
+we’d want to say that the person predicts better than a random guess. So
+the hypotheses become $$
+H_0: p \leq  1/2 \mbox{ Random chance} \\
+H_A: p > 1/2 \mbox{ Better then random chance}
+$$
+
+Two possible actions:
+
+- We reject $H_0$ and accept $H_A$.
+- Don’t have enough evidence to reject $H_0$. It is possible $H_0$ is
+  true, or we have insufficient information (lack of data is one
+  possible cause).
+
+In statistics we can reject point estimates but we cannot prove they are
+true.\\
+
+The idea is that we want to be able to to determine based on the data we
+have whether the null hypothesis is plausible. To do this we use
+p-values.
+
+*p-value:* Probability of obtaining a test statistic at least as extreme
+as the one observed assuming the null hypothesis is true. This is a
+critical definition for us
+
+We compare the *p-value* to some significance level $\alpha$, if it is
+below that threshold it means that we believe that the probability is to
+small for our data to have been generate by the null distribution and we
+should reject the null hypothesis. If it’s larger than the threshold, we
+are saying that based on evidence we can’t conclude that the data was
+not generated by that null distribution. In my opinion one of the keys
+to good decision making with statistics is understanding what p-values
+actually mean and whether you can really draw the conclusion that you
+want to. It’s much more complicated than reject if below .05, or
+sometimes you’ll hear it as the star rule (which you’ll see in software
+output later in this course).
+
+| Truth  Outcomes | Reject $H_0$     | Fail to Reject $H_0$ |
+|-----------------|------------------|----------------------|
+| $H_0$ True      | Type I Error     | Correct Decision     |
+| $H_0$ False     | Correct Decision | Type II Error        |
+
+Power also will increase with sample size.
+
+Comparing Two Means Say we did an experiment comparing two marketing
+initiatives. We performed an experiment on 10 similar products where the
+strategy was randomly assigned 5 products used machine learning aided
+strategies and 5 used human recommended strategies. We got the following
+profit results in thousands of dollars.
+
+| Human Aided | ML Aided |
+|-------------|----------|
+| 113         | 135      |
+| 150         | 130      |
+| 117         | 126      |
+| 139         | 121      |
+| 107         | 147      |
+
+If we look at the differences in sample means we have
+
+We are going to create a randomized distribution to see if this
+difference is statistically significant.
+
+``` r
+human <- c(113,150,117,139,107)
+ml <- c(135,130,126,121,147)
+mktData <- data.frame(profit=c(human, ml), 
+        strategy = c(rep("Human",5),rep("ML",5)))
+originalDif <- mean(ml) - mean(human)
+```
+
+Remember the basic idea is to randomly sample under the null
+distribution. So we need to figure out what the hypothesis is. It would
+make sense to claim that the machine learning aided methods will do
+better than the human aided. This would justify an investment in the
+technology so seems like the reasonable hypothesis.
+
+So we define the hypothesis as the ml aided method is better, which is
+an alternative hypothesis, leaving the null to be that the human aided
+algorithm is as good or better than the ml algorithm.  
+The null distribution is that the method doesn’t matter, so how do we
+deal with that, we randomly assign the methods to the results to see
+what that distribution would look like.
+
+``` r
+newMkt <- sample(mktData$strategy, 10)
+newData <- data.frame(profit=mktData$profit, strategy= newMkt)
+newData
+```
+
+    ##    profit strategy
+    ## 1     113       ML
+    ## 2     150    Human
+    ## 3     117       ML
+    ## 4     139    Human
+    ## 5     107    Human
+    ## 6     135       ML
+    ## 7     130       ML
+    ## 8     126    Human
+    ## 9     121       ML
+    ## 10    147    Human
+
+``` r
+tapply(newData$profit, newData$strategy, mean)
+```
+
+    ## Human    ML 
+    ## 133.8 123.2
+
+``` r
+newMeans <- tapply(newData$profit, newData$strategy, mean)
+newHumanMean <- newMeans[1]
+newMlMean <- newMeans[2]
+newMlMean - newHumanMean
+```
+
+    ##    ML 
+    ## -10.6
+
+Lets now do 10,000 of these to get the sampling distribution
+
+``` r
+set.seed(1000)
+randomResults <- NULL
+for(i in 1:10000){
+newMkt <- sample(mktData$strategy, 10)
+newData <- data.frame(profit=mktData$profit, strategy= newMkt)
+  newMeans <- tapply(newData$profit, newData$strategy, mean)
+  randomResults <- c(randomResults, newMeans[2] - newMeans[1]) 
+}
+```
+
+Now we can look at a histogram of the results
+
+``` r
+hist(randomResults)
+abline(v=originalDif, col="red", lwd=2)
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-89-1.png)<!-- --> The
+red mark here dictates where our data said the difference is.
+
+The p-value is the probability of being above the red line, which can be
+calculated by doing.
+
+``` r
+greaterThanOrig <- randomResults > originalDif
+sum(greaterThanOrig) / 10000
+```
+
+    ## [1] 0.2342
+
+If for some reason we wanted to preform a two sided test the p-value
+would be
+
+``` r
+absGreaterThanOrig <- abs(randomResults) > abs(originalDif)
+sum(absGreaterThanOrig) / 10000
+```
+
+    ## [1] 0.4651
+
+### Correlation Example
+
+Randomized distributions are a useful tool if our sample sizes are too
+small to trust asymptotic distribution (in other words use the Central
+Limit Theorem) or sometimes the central limit theorems require stronger
+assumptions. Sample correlation has a central limit theorem but its
+assumptions are stronger then the one for sample means.
+
+We will look at the relationship between the malevolence of a team’s
+uniform and the number of penalty yards a team gets in a game. Let $s_x$
+and $s_y$ be the sample standard deviation for x and y.
+
+Sample correlation is calculated by:
+
+Here we load the data and check the sample correlation
+
+``` r
+nfl <- read.csv("http://www.lock5stat.com/datasets1e/MalevolentUniformsNFL.csv")[,c(1:3)]
+sampleCor <- with(nfl, cor(ZPenYds, NFL_Malevolence))
+```
+
+Here is a plot of the data with a line fit to it.
+
+``` r
+m1 <- lm(ZPenYds ~ NFL_Malevolence, nfl) 
+#fitting the line you can ignore this for now we will discuss this later
+with(nfl, plot(NFL_Malevolence, ZPenYds, main="Malevolence of Uniform vs Penalty Yards"))
+abline(m1)
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-93-1.png)<!-- -->
+
+Our hypothesis is
+
+When creating the randomized distribution we assume that $H_0$ is true.
+We will randomly assign the penalty yards to the teams and see what the
+range of values of possible correlations are if $H_0$ is true.
+
+``` r
+set.seed(1863)
+mixedYds <- sample(nfl$ZPenYds) #remix order of yards
+newData <- nfl #give new data the original data
+newData$ZPenYds <- mixedYds 
+#the replace original yards with new mixture
+with(newData, cor(ZPenYds, NFL_Malevolence))
+```
+
+    ## [1] 0.1672568
+
+New plot of data and line
+
+``` r
+m2 <- lm(ZPenYds ~ NFL_Malevolence, newData)
+with(newData, plot(NFL_Malevolence, ZPenYds, main="Malevolence of Uniform vs Penalty Yards"))
+abline(m2)
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-95-1.png)<!-- -->
+
+Now lets do it a whole bunch of times (10,000) to get our new randomized
+distributions.
+
+``` r
+set.seed(1863)
+corList <- NULL
+for(i in 1:10000){
+  mixedYds <- sample(nfl$ZPenYds)
+  corList <- c(corList, cor(nfl$NFL_Malevolence, mixedYds))  
+}
+
+hist(corList, main="Correlations between Penalty Yards and Uniform Malevolence")
+abline(v=sampleCor, col="red", lwd=2)
+```
+
+![](BUDA525Module1_files/figure-gfm/unnamed-chunk-96-1.png)<!-- -->
+
+Lets do a one sided test
+
+``` r
+greaterThen <- corList > sampleCor
+sum(greaterThen) / 10000
+```
+
+    ## [1] 0.0109
+
+P-value is very small and we can feel safe about rejecting $H_0$ and
+conclude there is a positive correlation between Malevolent uniforms and
+amount of yards penalized. Remember correlation is not causation though
+and this was not an experiment so there can be confounding variables
+explaining the true relationship.
