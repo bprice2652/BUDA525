@@ -1,0 +1,2530 @@
+Linear Regression: Fitting, Interpreting, Visualizing
+================
+Brad Price, Ph.D.
+
+# Introduction to Regression
+
+This section is called Linear Regression so to begin we need to define
+what regression is. Sandy Weisberg’s Applied Linear Regression Fourth
+Edition defines regression in the following way:
+
+**Regression** *is the study of dependence*.
+
+This may seem like a very general statement, but in fact regression can
+give us insight many questions. Some examples of these questions
+
+- How does a female child’s height relate to her mothers height?  
+- Is the boiling point of water effected by the altitude?
+- Does a change in treatment effect a disease? If so does it effect the
+  disease after gender and other variables are accounted for?
+
+More business oriented questions become:
+
+- How does a new products success relate to it’s R&D lab?
+- Is a products success effect by the marketing team or strategy?
+- Does a change in marketing approach effect an individuals buying habit
+  in a positive way?
+- How does poverty relate to government compliance ratings of health
+  insurance plans?
+
+There are many others, and we will encounter some, but regression is
+just a general settting that can solve or give insight to many different
+problems.
+
+In this course our main focus is on **linear regression**. This is the
+basic method that most advanced statistical methods methods rely on.
+This is also considered one of the basic methods in statistical
+analysis, and much more complex methods are built from this basic
+method. Something to keep in mind the rest of the program is that the
+term \`\`linear regression’’ does not refer to straight lines, but the
+combination of terms that create our regression model.
+
+\##The Data
+
+The first thing you have to realize is that statistics is going through
+a fundamental change and has been for about 15 years. Questions can no
+longer be answered without a computer, the data is too large, questions
+answered with pen and paper tend to be theoretical or for homework
+exercises only. With this in mind no analysis can start without getting
+the data read into aprogramming language, such as R (what we will use),
+Python, SPSS, or whatever you’re using.
+
+Though computing is a big part of regression, which to me is the basis
+for all AI and machine learning, we need to define some notation that
+will hold for the rest of your statistics courses. Since we defined
+regression as the study of dependence in general so we need at least two
+variables to study. We will define the variable $Y$ as the response
+variable (dependent variable) and the predictor variable $X$
+(independent variable). The idea is that we think $X$ and $Y$ have a
+relationship such that $Y$ depends on $X$ regression is how we try to
+quantify the relationship. In the real world we only observe samples of
+$X$ and $Y$. and we always observe them jointly or paired (from their
+joint distribution). Our sample will always be of size $n$ and we define
+the sample $(Y,X) =\{(y_1,x_1),(y_2,x_2),\dots,(y_n,x_n)\}$. From this
+point on when discussing data $$
+Y=\left(\begin{array}{c}
+y_1 \\ 
+\vdots\\ 
+y_n
+\end{array}
+\right)
+\,\mathrm{and}\,
+\, X=\left(\begin{array}{c}
+x_1 \\ 
+\vdots\\ 
+x_n
+\end{array}
+\right)
+$$
+
+For the moment we will restrict $X$ to be one dimensional (a single
+variable), but as the course progresses when will let $X$ be an
+$n \times p$ matrix. This will allow us a little more freedom once we
+understand the basics. In the beginnings of our discussions of
+regression we are going to assume $X$ and $Y$ both are continuous.
+
+In the case described above, where we want to understand how a products
+sucesses relates to the R&D lab it was produced in we say that the
+dependent variable is the product success (however you want to define
+that), and the independent variable is the R&D lab. In the case of
+heights, we want to predict a daughters height (the response/ dependent
+variable) while knowning her mothers height (the predictor/ independent
+variable).
+
+## Data Visualization
+
+Now that we have a sample of size $n$ the first thing we need to do is
+understand the basics of our data. In regression this is more than just
+looking at the mean and standard deviation of each variable individually
+though 5 number summaries (mean, median, quartiles) and other summary
+statistics (standard deviations, variances) should always be used this
+doesn’t really tell us about the relationship between $X$ and $Y$, which
+is what we are most interested in. To depict this we need to use metrics
+that describe the relationship between $X$ and $Y$ such as correlation.
+But a major issue with correlation is it only describes linear
+relationships, and this is not the only relationship we care about. The
+most useful thing we can do to understand the relationship between $X$
+and $Y$ is to plot the data we have using a scatterplot. If we have more
+than one predictor variable we will use what is known as a scatterplot
+matrix. A scatterplot matrix is exactly what it sound like, it is
+multiple scatterplots arrange in a matrix form, so we can depict
+relationships side by side. Below is a simple example in R that creates
+the figure below.
+
+``` r
+library(alr4)
+```
+
+    ## Loading required package: car
+
+    ## Loading required package: carData
+
+    ## Loading required package: effects
+
+    ## lattice theme set by effectsTheme()
+    ## See ?effectsTheme for details.
+
+``` r
+plot(Forbes)
+```
+
+<img src="Module2_files/figure-gfm/unnamed-chunk-1-1.png" style="display: block; margin: auto;" />
+
+The data set is a very famous example of linear relationships that looks
+at how the boiling point of water is effected by altitude, measure by
+barometric pressure. In this case bp is the boiling point of water,
+press is the pressure, and lpress is the natural log of pressure. We’ll
+return to this data set later on in the course, as it has an interesting
+case study in it.
+
+Notice a single element of the matrix is just a scatter plot, it shows
+the relationship, but a scatterplot matrix allows us to visualize the
+relationships between three variables at once. On the diagonal are the
+variable names, the variable corresponding to the row of the plot is on
+the vertical (Y) axis, while the variable corresponding to the row is
+the horizontal (X) axis.
+
+So we can see from the plot that we can start to discuss how $X$ and $Y$
+relate to one another, in statistics terms we are trying to understand
+the joint distribution of $X$ and $Y$. We need to be able to discuss
+extreme points we view in plots. Figure 2 gives a graphical definition
+of extreme values of both the response $Y$ and predictor $X$. We need to
+\`\`formally’’ define this as well:
+
+- Define a **Leverage Point** as a point with extreme predictor values.
+- Define an **Outlier** as a point with an extreme response value,
+  realitive to it’s value of the predictor.
+
+Notice it is easy to see leverage points when $X$ is a single variable,
+but what happens when we have multiple predictors? This is a question
+will we continue to discuss throughout the semester. The figure below
+shows an example of what this looks like. Notice the outlier around
+$Y=40$ is an extreme value with regard to all other $Y$, but also is an
+outlier in the sense that it does not following the trend the rest of
+the data does. The leverage point we see has an
+
+``` r
+set.seed(110)
+X<-rnorm(100,0,2)
+Y=3+2.5*X+rnorm(100,0,.03)
+Y2=c(Y,40,3.5)
+X2=c(X,.3,9)
+type=c(rep(1,100),2,3)
+plot(Y2~X2,xlab="X",ylab="Y",main="Leverage and Outlier",pch=type)
+legend("topright", c("Normal","Outlier","Leverage"),pch=c(1,2,3))
+```
+
+<img src="Module2_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
+
+The plots we’ve seen so far give us an example of when $X$ and $Y$ have
+a relationship, but some times the more important question is whether or
+not $Y$ and $X$ have any relationship at all. If there is no
+relationship and we try to define one we can waste a lot of time. Again
+this is the reason we plot the data first!!! The figure below is an
+example of what we call a \`\`null plot’’. A null plot is a plot that
+depicts $X$ and $Y$ being independent.
+
+``` r
+Z=rnorm(100,0,5)
+plot(Z~X,main='Example of Null Plot')
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+## Conditional Distributions
+
+Graphically we have said that depicting the relationship between a
+predictor and response can be done using scatter plots. Simplistically
+this is true but in statistics scatter plots also give us insight to the
+joint distribution of $(Y,X)$. Remember from your intro class the joint
+distribution says something about how $(Y,X)$ relate to each other. This
+is great but normally we want to understand how $Y$ depends on $X$, so
+the joint distribution isn’t exactly what we want to find. Since we know
+$X$ is our predictor or our independent variable we will always know or
+set it. The overall idea is to understand the conditional distribution
+of $Y\mid X$. In our course we will specifically stick to discussing two
+parameters the conditional mean, $E(Y\mid X)$, and conditional variance,
+$Var(Y\mid X)$. Looking at the distribution of $Y \mid X$ over $Y$
+complicates things a little but we are looking for two very specific
+things:
+
+$$
+E(Y \mid X=x)=g(x)\\
+Var(Y) > Var(Y\mid X=x)
+$$ Where $g$ is a function we have defined.
+
+The main idea here is we want to not just understand the variable $Y$
+but more importantly how $Y$ relates to $X$ and the information we can
+leverage about $Y$ if we know $X$. The whole idea is summed up in that
+second equation, can we use $X$ to reduce the variance in $Y$, in
+laymens terms can we get a better feel about the response given I know
+some outside information.
+
+\###Conditional Mean Notice a few things about these \`\`ideal’’
+requirements. The first thing is that $Y$ actually has some relationship
+to $X$. If for every $x$ $$
+E(Y\mid X=x)=E(Y)
+$$ then our scatter plot is a null plot, thus knowing $X$ does not help
+us explain any of the information in $Y$. Therefore knowing $X$ isn’t
+really useful for understanding Y, and then any methods we come up with
+are pointless.
+
+Let’s ignore this setting for now and say that $E(Y\mid X=x)=g(x)$. We
+expect that there is some random variation that we will never be able to
+explain in $Y$, another way to say this is we will never be able to
+predict perfectly. We also know it is easier to discuss what will happen
+on average than for a specific case. With this in mind in regression we
+use the mean for the predicted value (also referred to as the fitted
+value). An important term in regression and something we will use
+constantly throughout the class is the theoretical residual. Define for
+data point $(y_i,x_i)$ $$
+y_i=E(Y\mid X=x_i)+\epsilon_i=g(x_i)+\epsilon_i
+$$
+
+We define $\epsilon_i$ to be the $i$th theoretical residual, the piece
+we will never be able to understand. This equation shouldn’t be a
+surprise, since $\epsilon_i$ is unique to each data point we can add any
+number to the mean that will result in $y_i$. So in essence the residual
+is:
+
+Residual=Actual-Fitted=Actual-Mean
+
+One way to think about this is that the fitted value you is our
+prediction, so the residual is the differance between the the actual and
+our prediction, so it’s a measure of how wrong our prediction is. If we
+think of it the second way it is just the difference between the data
+and the mean, which is just a measurement of distance from the data to
+the average.
+
+We can see what estimation of the conditonal mean function does is give
+us a better predicted value based on $X$ than just using $E(Y)$.
+
+\###Conditional Variance
+
+``` r
+par(mfrow=c(1,2))
+plot(Y~X,main='Simulated Data Model')
+model<-lm(Y~X)
+plot(model$residuals~X,ylab='Residuals',main='Residuals of Model')
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+The second aspect we concern ourself with is the conditional variance
+function. One thing people discuss and can be thought of as a main point
+of regression is reduction of variance. In essence the question becomes
+given that we know $X$ how much more certain are we in the value of $Y$?
+If we have accounted for some variance in $Y$ that means the variance of
+$Y\mid X$ is smaller than the variance of $Y$. A common assumption we
+use is that for every $x$ $$
+Var(Y \mid X=x)=\sigma^2
+$$
+
+The variance of the conditional distribution is also the variance of the
+residuals. Looking at the figure above we can compare the variance of
+$Y$ to the variance of the residuals. This makes sense to use because
+the conditional distribution at the point $x_i$, is the same as the
+residual for the point $y_i$. We will discuss this more in-depth as the
+courese goes on.
+
+``` r
+var(model$residuals)
+```
+
+    ## [1] 0.0008243385
+
+``` r
+var(Y)
+```
+
+    ## [1] 21.76765
+
+``` r
+Y4=rep(0,length(X))
+for(i in 1:length(X)){
+Y4[i]=5+3*X[i]+rnorm(1,0,.3*X[i]^2)
+}
+plot(Y4~X,ylab="Y",main="Example of Non-Constant Variance")
+```
+
+<img src="Module2_files/figure-gfm/unnamed-chunk-6-1.png" style="display: block; margin: auto;" />
+
+## Lowess/Loess Smoothers There are many different types of mean
+
+functions that can be used for regression:
+
+- $E(Y \mid X=x)=\beta_0+\beta_1*x$ which is referred to as Simple
+  Linear Regression
+- Non-Parametric Functions
+- $E(Y \mid X=x)=\beta_0+ \beta_1\{1-e^{-\beta_2x}\}$
+
+The main focus for this section will be on non-parametric functions,
+specifically Lowess/Loess smoothers. Lowess stands for Locally WEighted
+Scatterplot Smoothers, and we can view this method as \`\`letting the
+data fit itself’’. Ideally smoothers in general use non-parametric
+methods to find a mean or prediction function for our data. The local
+allows us to use the closest points of our data to help with prediction
+at each point we are concerned with. The idea is that for every data
+point we have (we cannot generalize outside of the bounds of this data)
+we will predict the mean using the closest $m$ points. We define $f$ as
+a percentage of the data and then use this to calculate the mean
+function. We will get into more specifics of how this works later but
+for now let’s just see how we can fit a smoother to the data and see how
+it works.
+
+``` r
+Y3=3+X^2+rnorm(100,0,.5)
+plot(Y3~X,ylab='Y',main='Smoother Example')
+lines(lowess(X,Y3,f=2/3),col=2)
+lines(lowess(X,Y3,f=.2),lty=3,col=3)
+lines(lowess(X,Y3,f=.01),lty=6,col=6)
+lines(lowess(X,Y3,f=.05),lty=5,col=5)
+lines(lowess(X,Y3,f=.9),lty=4,col=4)
+legend("topright",c("f=2/3","f=.2","f=.9","f=.05","f=.01"),lty=c(1,3,4,5,6),col=c(2,3,4,5,6))
+```
+
+<img src="Module2_files/figure-gfm/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
+
+Notice that the lower the $f$ value is the more local the smoother
+becomes. This means that the data could “oversmoothed”, which means we
+lose the idea of a general trend and start playing “connect the dots”.
+The idea of local regression is something we need to keep in mind moving
+forward, it is a way to tell if a model we create can generalize, or if
+our data functions differently across different parts of our predictors.
+
+## Simple Linear Regression
+
+**Simple linear regression** (SLR) defines a very specific regression
+models where: $$
+E(Y\mid X=x)=\beta_0+\beta_1x\\
+Var(Y \mid X=x)=\sigma^2
+$$
+
+Where we define:
+
+- $\beta_0$ as the intercept (Y-Intercept)
+- $\beta_1$ as the slope of the line (Rise Over Run)
+- $\sigma^2>0$ (Constant Variance)
+
+The constant variance assumption is probably the most restrictive thing
+in this model, as it says that the variance around the line must be
+constant. We will spend a lot of time on this in latter sections of this
+course.
+
+You’ve probably seen something like this in a previous course or even as
+far back as algrebra where you were asked to define a line that went
+through two points. Now we know that these two points come from a sample
+$(y_1,x_1),\dot,(y_n,x_n)$, so it is not as easy to calculate these
+values now. We will get to how to interpret these values and use our
+entire sample later on. For no let’s concern ourself with why this model
+is refered to as simple linear regression and some of the basic
+princples that can be incorporated.
+
+The reason we refer to this model as SLR, is that ther terms are linear,
+made up simple multiplication and addition (or subtraction and
+division). An example of linear terms could be: $$
+aY_1+bY_2+\ldots.
+$$ Don’t confuse this with “we can only have straight lines” that is not
+true! The term simple is used because we only have a single predictor
+variable, X. This means we only have one slope coefficent, which makes
+life “simple”.
+
+Now in previous course you may have seen notation like $y=mx+b$ be the
+equation for a line, we are trying to model $E(Y\mid X=x)$, the average
+$Y$ and a given value of $X$. We know that our expected value will not
+always be our observed value, so again we define the theoretical
+residual for the $i$th data point in our sample as: $$
+\epsilon_i=y_i-E(Y\mid X=x_i)
+$$ This is also refered to as statistical error. The easiest way to
+think of it is the vertical distance between your observed value and the
+mean function.
+
+Remember that: $$
+y_i=E(Y\mid X=x_i)+\epsilon_i
+$$
+
+After we make assumptions on our mean function such as SLR and constant
+variance, we make assumption on our residuals or errors. The two
+assumptions we make are: $$
+ E(\epsilon \mid X=x_i)=0 
+$$
+
+What this means to us is that our mean function “detrended” our data.
+There is no more relevant information in the relationship between $X$
+and $Y$.
+
+- $\epsilon_i$’s are independent of one another
+
+Knowing one error term shouldn’t be able to tell us anything about the
+others. You can think of this as stemming from the fact that all the
+$Y$’s are independent.
+
+Other assumptions made is that $\epsilon$ follows a normal distribution.
+This is a very restrictive assumption, but we will use it for things
+such as tests and intervals later on in this section
+
+## Ordinary Least Squares
+
+Now that we have defined SLR, we need to know how to estimate our 3
+parameters ($\beta_0$,$\beta_1$,$\sigma^2$) based on our sample. The
+traditional, and most common way to do this is to use what is known as
+the Ordinary Leasy Squares estimator (OLS). We will denote parameter
+estimates with $\hat{\beta_0}$, $\hat{\beta_1}$, $\hat{\sigma}^2$. Also
+let $$
+ \hat{y}_i=\hat{E}(Y\mid X=x_i)=\hat{\beta}_0+\hat{\beta}_1x_i
+$$ We will refer to $\hat{y}_i$ as the fitted value for the $i$th data
+point. We define the residual as:$y_i-\hat{y}_i$.
+
+The idea of OLS is to minimize the Residual Sum of Squares (RSS). We
+define: $$
+RSS(\beta_0,\beta_1)=\sum_{i=1}^n(y_i-(\beta_0+\beta_1x_i))^2
+$$  
+To find $(\hat{\beta}_0,\hat{\beta}_1)$ we minimize the RSS. For those
+interested in the theoretial side of regression, the RSS is based on the
+log-likelihood of the assumption that:
+$Y\mid X=x \sim N(\beta_0+\beta_1x, \sigma_2)$.
+
+We will develop this in depth in later sections. For now we need to
+introduce some notation that will help us as we develop the formuals for
+the estimators.
+
+| Notation | Equation | Description |
+|:--:|:--:|:--:|
+| $\bar{x}$ | $\frac{\sum x_i}{n}$ | Sample average of $x$ |
+| $\bar{y}$ | $\frac{\sum y_i}{n}$ | Sample average of $y$ |
+| $SXX$ | $\sum (x_i-\bar{x})^2$ | Sum of Squares for $x$ |
+| $\hat{Var}(x)$ | $\frac{SXX}{n-1}$ | Sample Variance of $x$ |
+| $SYY$ | $\sum (y_i-\bar{y})^2$ | Sum of Squares of $y$ |
+| $\hat{Var}(y)$ | $\frac{SYY}{n-1}$ | Sample Variance of $y$ |
+| $SXY$ | $\sum (x_i-\bar{x})(y_i-\bar{y})$ | Sum of cross-product of $x$ and $y$ |
+| $\hat{Cov}(x,y)$ | $\frac{SXY}{n-1}$ | Sample Covariance |
+| $\hat{Cor}(x,y)$ | $\frac{\hat{Cov}(x,y)}{\sqrt{\hat{Var}(x)\hat{Var}(y)}}$ | Sample Correlation |
+
+Note that when I write $\sum$ without any subscript it means to sum over
+all observations. Also notice the hat rule if there is a $hat{y}$ or a
+$\bar{y}$ over a variable it means it is estimated from our sample. If
+not it is the population or theoretical statistic.
+
+### Derivation and Equations
+
+Our goal is to find the pair $(\hat{\beta}_0,\hat{\beta}_1)$ that
+minimizes $RSS(\beta_0,\beta_1)$. To solve : $$
+   \arg_{(\beta_0,\beta_1)} \min \sum_{i=1}^n (y_i-\beta_0-\beta_1x_i)^2
+$$  
+We take the first derivative with respect to $\beta_0$ and set it equal
+to zero then we solve for $\hat{\beta}_0$.
+
+$$
+\frac{\delta RSS(\beta_0,\beta_1)}{\delta\beta_0}= -2(\sum_{i=1}^n(y_i-\beta_0-\beta_1 x_i))\\
+\Rightarrow \\ 
+0=-\sum_{i=1}^ny_i +n\beta_0+\beta_1\sum_{i=1}^nx_i\\
+\Rightarrow\\
+n\beta_0 = \sum_{i=1}^ny_i-\beta_1\sum_{i=1}^nx_i\\
+\Rightarrow\\
+\hat{\beta}_0=\bar{y}-\beta_1\bar{x}\\
+$$
+
+Now that we have our estimate for $\hat{\beta}_0$ we insert it into
+$RSS(\beta_0,\beta_1)$ and then solve first derivative set equal to 0
+for $\beta_1$. So we have that:
+
+$$
+\frac{\delta RSS(\hat{\beta}_0,\beta_1)}{\delta\beta_1}= -2\sum_{i=1}^n(x_i-\bar{x})((y_i-\bar{y})-\beta_1(x_i-\bar{x}))=0\\
+\Rightarrow\\
+0=SXY-\beta_1 SXX\\
+\Rightarrow\\
+\hat{\beta}_1=\frac{SXY}{SXX}
+$$
+
+So what we now have is that:
+
+But what do these parameters actually mean? We can think of the OLS
+equation, the line produced from OLS, as the line that minimizes the
+variance of the residuals for a straight line. Again this line is the
+expected mean given the $X$ variable. Using a different function than
+$RSS(\beta_0,\beta_1)$ will produce a different equation with a
+completely different interpretation. Take a look at SXY, SXX, and SYY,
+these correspond to the numerator of covaraince, variance of the
+predictor, and variance of the response. So really we can estimate these
+parameters using means, varaince, and covariance. This is something to
+keep in mind for when we move into “big data” problems.
+
+We have one last parameter to estimate $\sigma^2$. We calculate $$
+\hat{\sigma}^2=\frac{RSS(\hat{\beta}_0,\hat{\beta}_1)}{n-2} 
+$$ We also know that $\hat{\sigma}^2$ is the variance of the conditional
+distribution of $Y \mid X=x$ but also the residuals. Lastly we refer to
+$\hat{\sigma}$ as the standard error of regression, and is in the same
+units as the response. The $n-2$ is the degrees of freedom, note we
+estimate two coefficients $\beta_0$ and $\beta_1$, in general this will
+be $n-p-1$ where $p$ is the number of predictor variables. In this case
+$p=1$ since we only have one predictor variable.
+
+### AIS Example
+
+We will look at an example from the AIS data in the alr4 package. Though
+not it’s purpose we will look at the relationship between height and
+weight of Australian athletes. First we will load the data and take a
+look at the summary.
+
+``` r
+library(alr4)
+data(ais)
+attach(ais)
+summary(ais)
+```
+
+    ##       Sex              Ht              Wt              LBM        
+    ##  Min.   :0.000   Min.   :148.9   Min.   : 37.80   Min.   : 34.36  
+    ##  1st Qu.:0.000   1st Qu.:174.0   1st Qu.: 66.53   1st Qu.: 54.67  
+    ##  Median :0.000   Median :179.7   Median : 74.40   Median : 63.03  
+    ##  Mean   :0.495   Mean   :180.1   Mean   : 75.01   Mean   : 64.87  
+    ##  3rd Qu.:1.000   3rd Qu.:186.2   3rd Qu.: 84.12   3rd Qu.: 74.75  
+    ##  Max.   :1.000   Max.   :209.4   Max.   :123.20   Max.   :106.00  
+    ##                                                                   
+    ##       RCC             WCC               Hc              Hg       
+    ##  Min.   :3.800   Min.   : 3.300   Min.   :35.90   Min.   :11.60  
+    ##  1st Qu.:4.372   1st Qu.: 5.900   1st Qu.:40.60   1st Qu.:13.50  
+    ##  Median :4.755   Median : 6.850   Median :43.50   Median :14.70  
+    ##  Mean   :4.719   Mean   : 7.109   Mean   :43.09   Mean   :14.57  
+    ##  3rd Qu.:5.030   3rd Qu.: 8.275   3rd Qu.:45.58   3rd Qu.:15.57  
+    ##  Max.   :6.720   Max.   :14.300   Max.   :59.70   Max.   :19.20  
+    ##                                                                  
+    ##       Ferr             BMI             SSF              Bfat       
+    ##  Min.   :  8.00   Min.   :16.75   Min.   : 28.00   Min.   : 5.630  
+    ##  1st Qu.: 41.25   1st Qu.:21.08   1st Qu.: 43.85   1st Qu.: 8.545  
+    ##  Median : 65.50   Median :22.72   Median : 58.60   Median :11.650  
+    ##  Mean   : 76.88   Mean   :22.96   Mean   : 69.02   Mean   :13.507  
+    ##  3rd Qu.: 97.00   3rd Qu.:24.46   3rd Qu.: 90.35   3rd Qu.:18.080  
+    ##  Max.   :234.00   Max.   :34.42   Max.   :200.80   Max.   :35.520  
+    ##                                                                    
+    ##        Label        Sport   
+    ##  f-netball:23   row    :37  
+    ##  f-row    :22   t_400m :29  
+    ##  m-t_400m :18   b_ball :25  
+    ##  m-w_polo :17   netball:23  
+    ##  m-row    :15   swim   :22  
+    ##  f-b_ball :13   field  :19  
+    ##  (Other)  :94   (Other):47
+
+Next we will calculate the slope and intercept using brute force,
+treating r as a calculator and not a statistical software.
+
+``` r
+cor(Ht,Wt)
+```
+
+    ## [1] 0.7809063
+
+``` r
+cov(Ht,Wt)
+```
+
+    ## [1] 105.8584
+
+``` r
+(VarH=var(Ht))
+```
+
+    ## [1] 94.76038
+
+``` r
+(VarW=var(Wt))
+```
+
+    ## [1] 193.9216
+
+``` r
+(MH=mean(Ht))
+```
+
+    ## [1] 180.104
+
+``` r
+(MW=mean(Wt))
+```
+
+    ## [1] 75.00817
+
+``` r
+(n=length(Ht))
+```
+
+    ## [1] 202
+
+``` r
+SXX=(n-1)*VarH
+SYY=(n-1)*VarW
+SXY=cov(Ht,Wt)*(n-1)
+(Beta1=SXY/SXX)
+```
+
+    ## [1] 1.117117
+
+``` r
+(Beta0=MW-Beta1*MH)
+```
+
+    ## [1] -126.189
+
+Next le’ts use the lm function in R to show the same thing. Notice we
+will also see what we have access to from lm, and summary of an lm. This
+is extremely important to remember as you can get residuals and
+coefficients quickly, as well as fitted values.
+
+``` r
+(mod=lm(Wt~Ht))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Wt ~ Ht)
+    ## 
+    ## Coefficients:
+    ## (Intercept)           Ht  
+    ##    -126.189        1.117
+
+``` r
+names(mod)
+```
+
+    ##  [1] "coefficients"  "residuals"     "effects"       "rank"         
+    ##  [5] "fitted.values" "assign"        "qr"            "df.residual"  
+    ##  [9] "xlevels"       "call"          "terms"         "model"
+
+``` r
+summary(mod)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Wt ~ Ht)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -16.372  -5.296  -1.197   4.378  38.030 
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) -126.18901   11.39656  -11.07   <2e-16 ***
+    ## Ht             1.11712    0.06319   17.68   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 8.72 on 200 degrees of freedom
+    ## Multiple R-squared:  0.6098, Adjusted R-squared:  0.6079 
+    ## F-statistic: 312.6 on 1 and 200 DF,  p-value: < 2.2e-16
+
+``` r
+names(summary(mod))
+```
+
+    ##  [1] "call"          "terms"         "residuals"     "coefficients" 
+    ##  [5] "aliased"       "sigma"         "df"            "r.squared"    
+    ##  [9] "adj.r.squared" "fstatistic"    "cov.unscaled"
+
+We can see that the calculations by had (using R) and the R function
+lm() match up perfectly. To place a line on the plot we can simply use
+the code below.
+
+``` r
+plot(Wt~Ht,main="AIS Example",data=ais)
+abline(mod)
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+Note take a look at the abline help file for more detail.
+
+### Properties of OLS
+
+To put it lightly OLS is a big deal. It is the base method for linear
+regression, and has very important interpreations, which we will discuss
+shortly. First we need to get a feel for what some of the properties of
+OLS are, because it may give us a better intuition of what this line
+actually is. In this part the bullet points actually matter, the details
+are just for completeness for you.
+
+- $\hat{y_i}$ (the fitted value at $x_i$) produced from a weighted sum
+  of the $Y$’s
+
+Let $c_i=\frac{(x_i-\bar{x})}{SXX}$ then we have that: $$
+\hat{\beta}_1=\frac{SXY}{SXX}=\sum\frac{(x_i-\bar{x})}{SXX}y_i=\sum c_iy_i
+$$
+
+We also have that $$
+\hat{\beta}_0=\bar{y}-\hat{\beta}_1\bar{x}=\sum(\frac{1}{n}-c_i\bar{x})y_i=\sum d_iy_i
+$$
+
+This leaves us with $$
+ \hat{y_i}=\sum (d_i+c_i)y_i=\sum h_iy_i
+ $$ What this tells us is every predicted value, every point on the
+line, is a weighted sum of all the observations.
+
+- The fitted value of a general line as $X=\bar{x}$ is $\bar{y}$ for OLS
+
+$$ 
+\hat{E}(Y \mid X=\bar{x})=\hat{\beta}_0+\hat{\beta}_1\bar{x}\\
+=\bar{y}-\beta_1\bar{x}+\beta_1\bar{x}\\
+=\bar{y}      
+ $$
+
+- As long as we include an intercept in our model
+  $\sum \hat{\epsilon}_i=0$
+
+This is a fact that is similar to the fact that \$\_{i=1}^n (x_i-{x})=0.
+It can be useful in theory and in conecptual understanding.
+
+- The OLS estimates are unbiased $E(\hat{\beta}_0)=\beta_0$ and
+  $E(\hat{\beta}_1)=\beta_1$
+
+All this means is the estimator we are using us estimating what we think
+it is theoretically.
+
+- The Gauss Markov Theorem: OLS is the BLUE (Best Linear Unbiased
+  Estimator)
+
+The Gauss Markov Theorem is a very powerful tool. What it says is that
+the OLS estimates are the best linear unbiased estimators. To quote
+Sandy Weisberg in his text this means “if one believes in using linear
+unbiased estimates, the OLS estimates are the one to use.” For the most
+part in this course linear unbiased estimators are going to be our
+focus, so OLS is the tool we will use since it is the best. The “best”
+in this context means smallest variance of the residuals, and linear
+means linear combinations of the $y$’s.
+
+- We have a Central Limit Theorem that Gives Normality of the
+  Coefficients
+
+This is one of the more interesting and newer properties. For small
+sample sizes we can make the assumptions that $$
+\epsilon_i\sim NID(0,\sigma^2)
+$$
+
+Where $NID$ means normally identically independently distributed (iid).
+This gives us normality of our coefficients and will be jointly normal
+(we will discuss the variances of this in the next section). This is a
+very stringent assumption and one we don’t need if the sample size is
+large.
+
+If the sample size is large enough (who knows what that means) we don’t
+need a distributional assumption on our errors. This is great because it
+makes our model less restrictive and is one less thing to worry about.
+The main condition (see your text for the reference) is that the maximum
+of $\frac{x_i-\bar{x}}{SXX}$ is must get close to zero as the sample
+increases. For this to be true either the maximum distance between an
+observation is small or $SXX$ is large, or a combination of the two.
+Ideally it means the data is either really well grouped or the furthest
+absolute distance between an observation and the mean is small relative
+to the overall spread. We can check this directly if needed.
+
+### Variances of Coefficients
+
+Understanding the concepts of variance is really important to all of
+this, but the major take away from this is that the estimates for the
+slope and intercept are correlated, if you just look at the equation we
+use to estimate them you can see they are dependent. What follows is a
+discussion if the details of this, but in all actuality what you need to
+understand is that these estimates are correlated, and how to obtain the
+value of the covariance which is contained at the bottom of this
+section.
+
+We know since $\hat{\beta}_1$ and $\hat{\beta}_0$ are estimates of
+parameters that depend on $\epsilon_i$. We also know that
+$Var(\epsilon_i)=\sigma^2$ for all observations, and we have
+independence of observations. .
+
+The actual variance of our estimates are: $$
+Var(\hat{\beta}_1)=\frac{\sigma^2}{SXX}\\
+Var(\hat{\beta}_0)=\sigma^2(\frac{1}{n}+\frac{\bar{x}^2}{SXX})
+$$
+
+We also know that $\hat{\beta}_0=\bar{y}-\hat{\beta}_1\bar{x}$ so the
+estimates are not independent. The covariance and (somewhat less
+important) correlation we define as: $$
+Cov(\hat{\beta}_0,\hat{\beta}_1)=\sigma^2\frac{\bar{x}}{SXX}\\
+Cor(\hat{\beta}_0,\hat{\beta}_1)=\frac{\bar{x}}{\sqrt{SXX/n+\bar{x}^2}}
+$$
+
+In turn we have the estimated quantity for each of the variances and
+covariance. The major/only difference being that we replace $\sigma^2$
+with $\hat{\sigma}^2$. So we have
+
+$$
+\hat{Var}(\hat{\beta}_1)=\frac{\hat{\sigma}^2}{SXX}\\
+\hat{Var}(\hat{\beta}_0)=\hat{\sigma}^2(\frac{1}{n}+\frac{\bar{x}^2}{SXX})\\
+Cov(\hat{\beta}_0,\hat{\beta}_1)=\hat{\sigma}^2\frac{\bar{x}}{SXX}\\
+Cor(\hat{\beta}_0,\hat{\beta}_1)=\frac{\bar{x}}{\sqrt{SXX/n+\bar{x}^2}}
+$$
+
+We will use the notation $se( )$ to denote the standard error of the
+coefficients, so $$
+se(\hat{\beta}_1)=\sqrt{\hat{Var}(\hat{\beta}_1)}
+$$
+
+Note that the standard error is always going to refer to the square root
+of the estimated variance. THIS IS NOT THE SAME AS STANDARD DEVIATION,
+which in our terms are reserved for the variability of random variables
+(observable or not). Rule of thumb, standard error is for estimates,
+standard deviation is for random variables.
+
+Just to show you a few of the methods in R, the $vcov$ function gives
+the variance covariance matrix of the coefficients. Normally you don’t
+look at this directly, but it’s useful to see what is going on in your
+coefficients.
+
+``` r
+summary(mod)$sigma^2
+```
+
+    ## [1] 76.0437
+
+``` r
+summary(mod)$sigma
+```
+
+    ## [1] 8.720304
+
+``` r
+sum(mod$residuals)
+```
+
+    ## [1] 2.159384e-14
+
+``` r
+vcov(mod)
+```
+
+    ##             (Intercept)           Ht
+    ## (Intercept) 129.8815676 -0.719057556
+    ## Ht           -0.7190576  0.003992458
+
+### Confidence Intervals and Testing
+
+We understand that $(\hat{\beta}_0, \hat{\beta}_1)$ are estimates from
+our current sample, but we don’t want to just understand a single
+sample. We want to make inference to the population that our sample came
+from. To do this we need to figure out what values could be relevant, in
+this case we will foucs on two methods; Confidence Intervals (CI) and
+T-Tests. This should be just a basic reminder, confidence intervals
+define a range of values that would be valid for the population
+statistic. To do this we use a critical value based on a distribution,
+in our case we will use the t-distribution at the $(1-\alpha)*100\%$
+confidence level. In essence every confidence interval follows the form
+of: $$
+Est \pm CV(1-\alpha) * se(Est)
+$$
+
+The other tool that we will use throughout the semester is the t-test.
+The t-test itself can tell us if a value is close enough to our
+estimate. It is useful in the instance where we are trying to replicate
+results from a previous experiment. Especially in the regression case it
+tells us if relationships actually exist. Ideally we set a significance
+level first $\alpha$, then we define a Null and Alternative Hypothesis.
+The Null hypothesis always has the equal sign in it, we define the
+opposite (not equal, greater than, less than). We will directly discuss
+these tests. We define $t(\alpha/2,d)$ to be the $alpha/2$ quantile of
+the t-distribution with $d$ degree of freedom, defines a value that
+places $\alpha/2$ in the upper tail of the t-distribution. Note this is
+tricky and is the same form that your textbook uses.
+
+#### Intercept
+
+The $(1-\alpha)*100\%$ CI produce for the intercept is: $$
+\hat{\beta}_0 - t(\alpha/2,n-2)*se(\hat{\beta}_0) \leq \hat{\beta}_0 \leq \hat{\beta}_0 + t(\alpha/2,n-2)*se(\hat{\beta}_0) 
+$$
+
+While the t-test requires we define the hypotheses as $$
+\mathrm{NH:}\beta_0 =\beta_0^* \, , \beta_1 \mathrm{\,is\,\, arbitrary}\\ 
+\mathrm{AH:} \beta_0 \neq  \beta_0^*\, ,\beta_1 \mathrm{\,is\,\, arbitrary}\\
+$$
+
+Then our test statistic becomes $$
+t^*=\frac{\hat{\beta}_0-\beta_0^*}{se(\hat{\beta_0})} \sim t_{n-2}
+$$ Where $t_{n-2}$ represents a t distribution with $n-2$ degrees of
+freedom. For the two sided test we reject the null hypothesis when
+$\mid t^* \mid \geq t(\alpha/2,n-2)$.  
+The basic R summary of linear models shows the case when $\beta_0^*=0$.
+
+Testing and CI’s on $\hat{\beta_0}$ are rarely used in essence because
+of the interpretation.
+
+We know the basic interpretation of the intercept comes from it being
+**the** $E(Y \mid X=0)$ but this only applies when we observe data when
+$X=0$, if this is not the case this interpretation makes no sense. To
+make this statement we would be extrapolating which means we are
+commenting on the data outside of the area we have observed. **When the
+don’t observe data at** $X=0$ the only interpretation we have is that
+$\hat{\beta}_0$ is a tuning parameter. For our purposes unless otherwise
+told we will always use an intercept.
+
+#### The Slope
+
+The $(1-\alpha)*100\%$ CI produce for the intercept is:
+
+While the t-test requires we define the hypotheses as
+
+Then our test statistic becomes We then follow the same principles as
+what we have in $\beta_0$.
+
+For the most part slope coefficients are what we care about specifically
+whether or not the coefficient in 0. That is we set $\beta_1^*=0$. Think
+of what the interpretation of this test is, it means does the
+relationship exist or not. This is also the default test that is
+produced in R. Overall this is one of the more important tests we have
+because of the interpretation.
+
+\*\* We interpret $\hat{\beta}_1$ as the “average” increase/decrease in
+$Y$ when $X$ is moved one unit\*\*. This comes about from the fact that:
+
+$$
+E(Y \mid X=x+1)-E(Y\mid X=x) = \beta_0+\beta_1(x+1)-\beta_0-\beta_1x \\
+= \beta_1x+\beta_1-\beta_1x \\
+= \beta_1
+$$
+
+So the idea here is that we have need to test these coefficients to see
+what they mean. Typically the only test that matters is does a slope
+coefficient equal to zero. If we can prove that the slope isn’t equal to
+zero we can say there is a relationship between the predictors. The test
+of a coefficient at zero is simple, and even simpler using software,
+especially R. The test provided by R is the one that the coefficient
+(estimate) is equal to zero. The first column of the summary output is
+the coefficient estimates, and the second is the standard error of the
+estimates. The third and foruth column is what we care about, it give
+the two sided hypothesis test that the coefficient in the corresonding
+row is equal to zero or not equal to zero. The test statistics (just
+estimate divided by standard error) and the corresponding p-value for
+the test. Based on this output what do you see? I see both have p-values
+that are very small, way below the .05 threshold that people normally
+use. So you’d say I reject the null hyptothesis that the coefficient is
+0. But do we really care about that with regard to the intercept?
+Normally the answer to that question is no, but there could be a
+situation arise, where it is viewed as an offset expected to be zero.
+What we do care about is the test for the slope, this allows us to say
+that a relationship exists between height and weight.
+
+Again we know these are just estimates so what can we say about the
+possible values, again calculate the cofidence interval. To do this in R
+we just use the confint function. Then the interepretation works just
+like any other interval. Again we don’t care much about the intercept,
+but we can say that we are 95% confident that the true slope coefficient
+is between .992 and 1.24. Theoretically this looks great
+
+``` r
+summary(mod)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Wt ~ Ht)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -16.372  -5.296  -1.197   4.378  38.030 
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) -126.18901   11.39656  -11.07   <2e-16 ***
+    ## Ht             1.11712    0.06319   17.68   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 8.72 on 200 degrees of freedom
+    ## Multiple R-squared:  0.6098, Adjusted R-squared:  0.6079 
+    ## F-statistic: 312.6 on 1 and 200 DF,  p-value: < 2.2e-16
+
+``` r
+confint(mod)
+```
+
+    ##                    2.5 %      97.5 %
+    ## (Intercept) -148.6618436 -103.716178
+    ## Ht             0.9925209    1.241713
+
+### Prediction and Fitted Values
+
+We have previously discussed inference but what about prediction, or the
+fitted values of the mean function itself? These are two separate
+settings
+
+- Prediction: We are predicting a new observation, future value, and was
+  not used in estimating our parameters
+- Fitted values are just based on the mean function
+
+Let’s discuss prediction first. For prediction we can easily define
+$\hat{y_i}$ for the point $x_i$ by just using $\beta_0$ and $\beta_1$.
+The problem is that is just the mean value of the condtional
+distribution. A observation $y_*$ is written as $$
+y_*=\beta_0+\beta_1x_*+\epsilon_*
+$$
+
+Let $\tilde{y}_*$ predict the unobserved value for $(y_*,x_*)$. The
+takeaway here is that even if we estimate the mean function correctly we
+would still have random error from the $\epsilon$. We need to estimate a
+variance for this situation it needs to encompass the error from the
+mean function and the error from prediction ($\epsilon$). Using this
+idea the variance becomes: $$
+Var_{pred}(\tilde{y}_*\mid X=x_*)=\sigma^2+\sigma^2(\frac{1}{n}+\frac{(x_*-\bar{x})^2}{SXX})
+$$
+
+The standard error becomes $$
+sepred(\tilde{y}_*\mid X=x_*)=\hat{\sigma}\left(1+\frac{1}{n}+\frac{(x_*-\bar{x})^2}{SXX}\right)^{\frac{1}{2}}
+$$ We refer to a prediction interval as: $$
+\tilde{y} \pm t(\alpha/2,n-2)*sepred(\tilde{y}_*\mid X=x_*)
+$$
+
+Think of these as reasonable values that can appear for $y_*$ at $x_*$.
+This is probably the most asked question we see when it comes to using
+$\hat{y}$.
+
+For the fitted values we can think think of these as the estimates of
+the mean at point $x$. Really all we are doing in this case is putting
+an interval on your mean function. The standard error is calculated by
+only part of that of $Var_{pred}$. $$
+sefit(\hat{y}\mid x_*)=\hat{\sigma}\left(\frac{1}{n}+\frac{(x_*-\bar{x})^2}{SXX}\right)^{\frac{1}{2}}
+$$
+
+Ideally what we are trying to do is create a set that any possible
+$(\beta_0,\beta_1)$, which is easily defined the set of all $y$ that
+fall in between the lines $$
+\hat{\beta}_0+\hat{\beta}_1 \pm sefit(\hat{y}\mid x_*)(2F(\alpha,2,n-2))^\frac{1}{2}
+$$
+
+One thing we will always see is that prediction interval is wider than
+the confidence interval, Why?
+
+Below we have the example of a prediction interval and confidence
+interval
+
+``` r
+predict(mod,newdata=data.frame(Ht=200))
+```
+
+    ##        1 
+    ## 97.23437
+
+``` r
+predict(mod,newdata=data.frame(Ht=200),interval="prediction",se.fit=TRUE)
+```
+
+    ## $fit
+    ##        fit      lwr      upr
+    ## 1 97.23437 79.81899 114.6498
+    ## 
+    ## $se.fit
+    ## [1] 1.398885
+    ## 
+    ## $df
+    ## [1] 200
+    ## 
+    ## $residual.scale
+    ## [1] 8.720304
+
+``` r
+predict(mod,newdata=data.frame(Ht=200),interval="confidence",se.fit=TRUE)
+```
+
+    ## $fit
+    ##        fit      lwr      upr
+    ## 1 97.23437 94.47592 99.99283
+    ## 
+    ## $se.fit
+    ## [1] 1.398885
+    ## 
+    ## $df
+    ## [1] 200
+    ## 
+    ## $residual.scale
+    ## [1] 8.720304
+
+``` r
+attach(ais)
+```
+
+    ## The following objects are masked from ais (pos = 3):
+    ## 
+    ##     Bfat, BMI, Ferr, Hc, Hg, Ht, Label, LBM, RCC, Sex, Sport, SSF, WCC,
+    ##     Wt
+
+``` r
+plot(Wt~Ht,xlab="Height",ylab="Height",main="Example of Confidence and Prediction Bands", data=ais)
+abline(mod)
+CI=predict(mod,interval="confidence")
+PI=predict(mod,data.frame(Ht=148:210),interval="prediction")
+lines(x=Ht,y=CI[,2],col=2)
+lines(x=Ht,y=CI[,3],col=2)
+lines(x=148:210,y=PI[,2],col=3)
+lines(x=148:210,y=PI[,3],col=3)
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+### R-Squared: $R^2$
+
+We know that if we did not use $X$ in our model the best prediction of
+any observation would be $\bar{y}$, but since we are conditioning on $X$
+we expect to do better. We have said previously part of regression is
+variance reduction, gaining precision. There are certain values that
+allow us to to depict this the amount of variance we accounted for by
+conditioning on $X$. We define the Sum of Squares Regression as $$
+SSReg=SYY-RSS
+$$ We can see it is the difference in the residuals between when we
+condition on $X$ and when we do not. Since $SSReg$ is on the same scale
+as $Y$ and the residuals for that matter a large number here may not
+mean much, the same with a small number. It is relative to the variation
+of $Y$, so we want to look at this as a percentage of variation
+accounted for. We define $R^2$, the coefficient of determination as $$
+R^2=\frac{SSReg}{SYY}=1-\frac{RSS}{SYY}
+$$
+
+There are a few different ways to get these values, first is directly
+from the $R$ output, more indirectly we can get these from the ANOVA
+table in R which we won’t discuss here. The easiest way is to know that
+$$
+R^2=Cor(Y,X)^2
+$$
+
+Looking at our AIS data we get that.
+
+``` r
+attach(ais)
+```
+
+    ## The following objects are masked from ais (pos = 3):
+    ## 
+    ##     Bfat, BMI, Ferr, Hc, Hg, Ht, Label, LBM, RCC, Sex, Sport, SSF, WCC,
+    ##     Wt
+
+    ## The following objects are masked from ais (pos = 4):
+    ## 
+    ##     Bfat, BMI, Ferr, Hc, Hg, Ht, Label, LBM, RCC, Sex, Sport, SSF, WCC,
+    ##     Wt
+
+``` r
+summary(mod)$r.squared
+```
+
+    ## [1] 0.6098146
+
+``` r
+cor(Ht,Wt)^2
+```
+
+    ## [1] 0.6098146
+
+There are other ways to do model validation and comparison that we will
+discuss in later chapters.
+
+### The Residuals
+
+The residuals show us how assumptions of are model are met. To see this
+in the simple linear regression case we plot the residuals against $X$,
+or against the fitted values. We will look at the fitted values because
+it extends easier to the multiple regression setting. There are 4 cases
+we tend to really worry about
+
+- When the residuals have curvature/trend with the fitted values
+- When there is non-constant variance
+- When there are outliers in the residuals
+- When the plot is a null plot
+
+``` r
+set.seed(128)
+X=rnorm(100,0,3)
+Y=rep(0,length(X))
+for(i in 1:length(X)){
+Y[i]=5+3*X[i]+rnorm(1,0,.3*X[i]^2)
+}
+Y2=5+2*X+X^2+rnorm(100,0,3)
+Y3=5+2*X+rnorm(100,0,.5)
+Y4=c(Y3,100)
+X2=c(X,0)
+M2=lm(Y~X)
+M3=lm(Y2~X)
+M4=lm(Y4~X2)
+M5=lm(Y3~X)
+par(mfrow=c(2,2))
+plot(summary(M2)$residuals~X,ylab="Residuals",xlab="X",main="NCV")
+plot(summary(M3)$residuals~X,ylab="Residuals",xlab="X",main="Curvature")
+plot(summary(M4)$residuals~X2,ylab="Residuals",xlab="X",main="Outlier")
+plot(summary(M5)$residuals~X,ylab="Residuals",xlab="X",main="Null Plot")
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+## Multiple Linear Regression
+
+Multiple linear regression generalized the simple linear regression
+models by allowing for more than one predictor variable in the mean
+function.
+
+### Adding a term to SLR
+
+The model we’ve discussed up to this point is $$
+E(Y \mid X_1=x_1)=\beta_0+\beta_1x_1.
+$$
+
+This model works fairly well and has a great interpretation which we
+have touched on just slightly. But what happens if we think another
+predictor, $X_2$ will help in describing the conditional mean function
+of $Y$. What does it mean to add a term to this model? So mathematically
+we have $$
+E(Y \mid X_1=x_1, X_2=x_2)=\beta_0+\beta_1x_1 +\beta_2x_2
+$$
+
+The main idea in adding another variable, in our case $X_2$ is to
+explain the part of $Y$ that we couldn’t with only using $X_1$.
+
+### Explaining Variability
+
+Adding terms in essence is about unique information. It is about
+describing information we haven’t explained in $Y$, but it is also about
+information that is unique in the predictors. For an example lets say
+that two uncorrelated variables could explain $100\%$ of the variation
+in $Y$. This would mean the the variation that is explained jointly is
+the sum of of the variation they explain individually. This works even
+if we can’t explain $100 \%$ of the variation in $Y$, the total just
+becomes the $R^2$ of the model with both variables which is the sum of
+the $R^2$ of each of the SLR regressions. THIS ONLY WORKS IF THE TWO
+PREDICTORS ARE INDEPENDENT.
+
+If the two predictors are not independent which is a real world setting
+the variation of the model with both predictors explain does not add up
+to the sum explained by the SLR. Again it comes down to unique
+information since the two predictors are related they share some
+information, the amount depends on the correlation. With this in mind
+just looking at the correlation with $Y$ after the first predictor
+doesn’t work. The question becomes how do we know how much unique
+information in the new variable $X_2$ that helps explain anything in
+$Y$.
+
+### Added Variable Plots (AVP)
+
+Added variable plots are a way to see how much information a new
+variable contains in relationship to a response that has not already
+been accounted for in a model. Let’s actually write down what we are
+trying to do. Given a SLR model $$
+E(Y \mid X_1=x_1)=\beta_0+\beta_1x_1.
+$$ We want to see if $X_2$ helps create a better model. We can see how
+$Y$ relates directly to $X_1$ and $X_2$ through scatterplots, but how
+can we begin to visualize this. The answer is Added Variable Plots. An
+added variable plot shows the relationship between the information left
+over with $X_1$ in the model and the unique information that is in $X_2$
+that is not in $X_1$.
+
+To do this we use principles from SLR. We know the information from $Y$
+that is not contained in $X_1$ is contained in the residuals of the SLR.
+The same for the information that is contained in $X_2$ that is not
+contained in $X_1$. So we need two models $$
+M_1 : E(Y \mid X_1=x_1)=\beta_0+\beta_1x_1\\
+M_2 : E(X_2 \mid X_1=x_1)=\eta_0+\eta_1x_1
+$$
+
+Next create a scatter plot where the residuals from $M_1$ are placed on
+the vertical axis and $M_2$ on the horizontal axis. This relationship
+will tell us if adding $X_2$ to our model will help at all.
+
+Let’s look at a simulated set up
+
+``` r
+set.seed(213)
+X1=rnorm(100,0,1)
+X2=rnorm(100,4,2)
+Y=3+2*X1+X2+rnorm(100)
+M1=lm(Y~X1)
+summary(M1)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Y ~ X1)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.8233 -1.2994  0.2335  1.7008  5.5713 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   6.9064     0.2410   28.65  < 2e-16 ***
+    ## X1            1.8722     0.2294    8.16 1.15e-12 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 2.408 on 98 degrees of freedom
+    ## Multiple R-squared:  0.4046, Adjusted R-squared:  0.3985 
+    ## F-statistic: 66.59 on 1 and 98 DF,  p-value: 1.153e-12
+
+``` r
+M2=lm(X2~X1)
+
+plot(summary(M1)$residuals~summary(M2)$residuals, xlab="Residuals of M2", ylab="Residuals of M1",main="Added Variable Plot for X2")
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+What if we have a correlation between $X_1$ and $X_2$ the AVP could look
+like
+
+``` r
+X3=2+3*X1+rnorm(100,0,4)
+Y=3+2*X1+X3+rnorm(100)
+M1=lm(Y~X1)
+M3=lm(X3~X1)
+```
+
+Compare the summary/slope of the added variable plot to the slope
+associated for X3. It is exactly the same, this says a slope coefficent
+in MLR accounts for every other variable in the model.
+
+``` r
+plot(summary(M1)$residuals~summary(M3)$residuals, xlab="Residuals of M3", ylab="Residuals of M1",main="Added Variable Plot for X3")
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+### UN Example
+
+Looking at the data for the UN data set we want to try and describe the
+mean function of $\log(fertility)$ by $\log(ppgdp)$ and want to see if
+adding $lifeExpF$ . We will do this through an AVP
+
+``` r
+library(alr4)
+attach(UN11)
+head(UN11)
+```
+
+    ##                 region  group fertility   ppgdp lifeExpF pctUrban
+    ## Afghanistan       Asia  other     5.968   499.0    49.49       23
+    ## Albania         Europe  other     1.525  3677.2    80.40       53
+    ## Algeria         Africa africa     2.142  4473.0    75.00       67
+    ## Angola          Africa africa     5.135  4321.9    53.17       59
+    ## Anguilla     Caribbean  other     2.000 13750.1    81.10      100
+    ## Argentina   Latin Amer  other     2.172  9162.1    79.89       93
+
+``` r
+Mod1=lm(log(fertility)~lifeExpF+log(ppgdp))
+summary(Mod1)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(fertility) ~ lifeExpF + log(ppgdp))
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.61778 -0.16891  0.03731  0.17591  0.61072 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  3.50736    0.12707  27.601  < 2e-16 ***
+    ## lifeExpF    -0.02824    0.00274 -10.306  < 2e-16 ***
+    ## log(ppgdp)  -0.06544    0.01781  -3.675 0.000307 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.248 on 196 degrees of freedom
+    ## Multiple R-squared:  0.6926, Adjusted R-squared:  0.6894 
+    ## F-statistic: 220.8 on 2 and 196 DF,  p-value: < 2.2e-16
+
+``` r
+Mod2=lm(log(fertility)~log(ppgdp))
+summary(Mod2)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(fertility) ~ log(ppgdp))
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.79828 -0.21639  0.02669  0.23424  0.95596 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  2.66551    0.12057   22.11   <2e-16 ***
+    ## log(ppgdp)  -0.20715    0.01401  -14.79   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.3071 on 197 degrees of freedom
+    ## Multiple R-squared:  0.526,  Adjusted R-squared:  0.5236 
+    ## F-statistic: 218.6 on 1 and 197 DF,  p-value: < 2.2e-16
+
+``` r
+avPlots(Mod1)
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+Notice the estimate from Mod1 for $\log(ppgdp)$ and that in Mod2 do not
+match up. The reason is because Mod1 is accounting for the information
+of lifeExpF.
+
+This methodology can generalize to any dimension of model we want, we
+just always look to see if we add one variable at a time.
+
+### MLR Model
+
+The general MLR model with response $Y$ and predictors
+$X_1, \ldots, X_p$ take the form $$
+E(Y \mid X)=\beta_0+\beta_1X_1+\ldots+\beta_pX_p.
+$$
+
+Similarly when we condition on specific values of the predictors we get
+$$
+E(Y \mid X)=\beta_0+\beta_1x_1+\ldots+\beta_px_p.
+$$
+
+When $p$=1 we have a line, and are also in the SLR setting. When $p=2$
+we no longer have a line we have 3 dimensional plane. When $p>2$ we have
+a hyperplane in $(p+1)$ dimensional space, $p$ predictors and the
+response. This is extremely hard to visualize a general $p$ dimensional
+space so we will rely on methods like AVP’s to create these model.
+
+### Terms and Predictors
+
+**Transformations of predictors** Sometimes we really would like to use
+$X_j$ as our predictor but it doesn’t allow for the set up of linear
+regression. Because we like the ease and interpretation of SLR and MLR
+we transform the predictors. Look at the UN example just used. This
+really allows for a lot more flexibility for the problems we can use
+linear regression for.
+
+**Polynomials and Interactions** Ploynomials represent MLR models where
+we place $X^d$ where d is as a term/ predictor in our model. This allows
+for curves to fit our data rather than straight line . As we can see
+this can be an extremely powerful tool. Interactions allow us to use
+terms $X_jX_k$ which allow us to model for relationships in predictors
+that we can exploit. We can also use combinations of variables; weighted
+averages, rations, $\ldots$, etc. Think of the way BMI uses combinations
+of height and weight.
+
+**Dummy Variables and Factors** Dummy variables also go by a different
+name, Indicator variables. That is it is a variable that takes a 1 when
+the variable is true 0 any other time. So let’s say we want to come up
+with a variable that says whether or not a treatment was applied or not.
+When we the treatment is applied the variable takes on a 1 when it is
+not it is 0. Factors are applied the same way, will discuss how multiple
+dummy variables allow us to model categorical variables.
+
+**Principal Components** In the real world we have predictors that are
+related, and in some instances that measure the same thing. What
+principal components allow us to do is create a special form of a
+weighted average of these subset of variables.
+
+### Ordinary Least Squares
+
+Making the multiple linear regression we have $$
+E(Y \mid X)=\beta_0+\beta_1X_1+\ldots\beta_pX_p\\
+Var(Y\mid X)=\sigma^2
+$$
+
+Where we $\beta$’s and $\sigma^2$ need to be estimated.
+
+### Notation
+
+Just like in SLR we have $n$ observations, but now we are defining that
+we have p-variate matrix of predictors $X$, and univariate response $Y$.
+We now define the mean function as $$
+E(Y \mid X)=X\beta.
+$$
+
+Where we define $$
+Y=\left(\begin{array}{c}
+y_1 \\ 
+\cdots \\ 
+y_n
+\end{array} \right)
+,\,\,\,
+X=\left(\begin{array}{cccc}
+1 & x_{11} & \ldots & x_{1p} \\ 
+1 & x_{21} & \ldots & x_{2p} \\ 
+\vdots & \vdots & \vdots & \vdots \\ 
+1 & x_{n1} & \ldots & x_{np}
+\end{array} \right)
+$$
+
+We also define $$
+\beta=\left(\begin{array}{c}
+\beta_0 \\ 
+\beta_1 \\ 
+\vdots \\ 
+\beta_p
+\end{array} \right)
+$$
+
+So now we can define the MLR problem as $$
+Y=X\beta+\epsilon
+$$ Where $\epsilon$ is defined as $$
+\left(\begin{array}{c}
+\epsilon_1 \\ 
+\vdots \\ 
+\epsilon_n
+\end{array} \right)
+$$
+
+We can denote the mean function denoted at a point $x_i$ as $$
+E(Y\mid X=x_i)=x_i^T\beta=\beta_0+\beta_1x_{i1}+\ldots+\beta_px_{ip}
+$$
+
+We also make the assumption that $$
+E(\epsilon \mid X)=0 , \,\,\, Var(\epsilon \mid X)=\sigma^2I_n
+$$ where $I_n$ is the identity matrix ( $n \times n$ matrix with
+diagonal entries of 1). We can also extend this assumption to be
+$\epsilon\mid X \sim N(0, \sigma^2I_n)$.
+
+### OLS Estimator
+
+Again we choose the estimator $\hat{\beta}$ based on the minimization of
+the residual sum of squares. So we find $$
+\hat{\beta}=\arg \min_\beta RSS(\beta)\\
+=\arg \min_\beta \sum_{i=1}^n\, (y_i-x_i^T\beta)^2\\
+= \arg \min_\beta \,(Y-X\beta)^T(Y-X\beta)\\
+= \arg \min_\beta \, \epsilon^T\epsilon
+$$
+
+So minimizing the RSS with respect to $\beta$ we get the following $$
+\bigtriangledown_\beta RSS(\beta)= -2X^T(Y-X\beta)=0\\
+X^TY-X^TX\beta =0\\
+X^TX\beta =X^TY\\
+\hat{\beta}=(X^TX)^{-1}X^TY
+$$
+
+When $(X^TX)^{-1}$ exists. To us that means $n>p$ and none of the $X$
+variables are too correlated.
+
+The $\beta$ term in software is never computed directly from this
+equation. They use what is known as a QR decomposition and you can find
+that in the appendix of your text book. If it is calculated we should
+calculate it using centered variables. So we define $\tilde{X}$ to be
+the $X$ matrix with the column means subtracted off, and $\tilde{Y}$ to
+be the $Y$ vector with the mean subtracted off. The define $$
+C=\frac{1}{n-1}\left(\begin{array}{cc}
+\tilde{X}^T\tilde{X} & \tilde{X}^T\tilde{Y} \\ 
+\tilde{Y}^T\tilde{X} & \tilde{Y}^T\tilde{Y}\end{array}\right)\\
+=\frac{1}{n-1}\left(\begin{array}{cc}
+SXX & SXY \\ 
+SXY & SYY
+\end{array} \right)
+$$
+
+Then let $\beta^*$ be the coefficents for $\beta_1, \ldots, \beta_p$
+which is $$
+\hat{\beta}^*=(\tilde{X}^T\tilde{X})^{-1}\tilde{X}^T\tilde{Y}=(SXX)^{-1}SXY
+$$ Then $\hat{\beta}_0=\bar{y}-\hat{\beta}^{T*}\bar{x}$ where $\bar{x}$
+is the vector of predictor means. Then the fitted values are $$
+\hat{Y}=X\hat{\beta}
+$$
+
+### Properties of the OLS Estimates
+
+Again we have variance estimators for $\hat{\beta}$ and need to come up
+with an estimator for $\sigma^2$. So we have
+
+$$
+Var(\hat{\beta})=Var((X^TX)^{-1}X^TY)\\
+=(X^TX)^{-1}X^TVar(Y)X(X^TX)^{-1}\\
+=\sigma^2(X^TX)^{-1}
+$$
+
+Then we replace $\sigma^2$ with $\hat{\sigma}^2$, where $$
+\hat{\sigma}^2=\frac{RSS}{n-(p+1)}
+$$
+
+### Coefficient of Determination
+
+Again the Coefficient of Determination is just $R^2$ again. We can break
+down $SYY$ as $$
+SYY=RSS+ SSReg
+$$
+
+where RSS is the unexplained sum of squares from the model, and the
+SSReg which is the sum of squares of $Y$ that we can explain by
+conditioning on $X$. Again we can write $R^2$ as $$
+R^2=\frac{SSReg}{SYY}=1-\frac{RSS}{SYY}
+$$
+
+which is the proportion of variability in $Y$ explained by your model.
+$R^2$ can also be shown to be $$
+R^2=Cor^2(Y,\hat{Y})
+$$ We also refer to $R^2$ as the multiple correlation coefficient
+because it is the maximum correlation between $Y$ and any linear
+combination of the terms in our model. Again this is produced in R
+anytime we run the summary of a model.
+
+For our example look at the difference between the two models in the UN
+data the one with and without $lifeExpF$, we can see that the model with
+it has a 0.69 $R^2$ value while the model without the variable has an
+$R^2$ of 0.526.
+
+Some people will tell you to always select the model with the highest
+$R^2$, this isn’t a reasonable thing to do as we can trick a model to
+always have a higher $R^2$ but may not mean much. We will discuss this
+much more indepth later, but for now under stand $R^2$ is useful for
+interpertation purposes of a model, but not for model selection in MLR
+(ever!).
+
+The MLR setting allows/ requires us to test $\beta_0, \ldots, \beta_p$.
+For now we will only consider testing the one coefficient at a time. The
+only change from SLR is the way we write the hypothesis $$
+NH: \beta_1 =\beta_1^* \, \,\ ,\ \beta_0,\beta_2,\ldots,\beta_p \, \, \mathrm{is \,\, arbitrary}\\
+AH: \beta_1 \neq \beta_1^* \, \,\ ,\ \beta_0,\beta_2,\ldots,\beta_p \, \, \mathrm{is \,\, arbitrary}
+$$
+
+So we still have the t-test $$
+t^*=\frac{\hat{\beta}_j-\beta_j^*}{se(\beta_J)}\sim t_(n-p-1)
+$$
+
+The alternatives $\beta_j\geq \beta^*$ result in the same test statistic
+the p-value is the only thing that changes. Remember we only look at the
+upper or lower tail of the distribution. The default test is R is
+$\beta^*_j=0$ and results in a two sided p-value with the test statistic
+degrees of freedom. Again we can look at the summary of model 1 in the
+UN data.
+
+``` r
+summary(Mod1)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(fertility) ~ lifeExpF + log(ppgdp))
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.61778 -0.16891  0.03731  0.17591  0.61072 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  3.50736    0.12707  27.601  < 2e-16 ***
+    ## lifeExpF    -0.02824    0.00274 -10.306  < 2e-16 ***
+    ## log(ppgdp)  -0.06544    0.01781  -3.675 0.000307 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.248 on 196 degrees of freedom
+    ## Multiple R-squared:  0.6926, Adjusted R-squared:  0.6894 
+    ## F-statistic: 220.8 on 2 and 196 DF,  p-value: < 2.2e-16
+
+### Testing and AVP’s
+
+Again we refer to our discussion on AVP’s. We have 3 basic findings when
+it comes to t-test and AVP’s.
+
+- The slope of the AVP for the term $X_j$ is the same as the slope term
+  for $X_j$ in the full model (See previous example)
+- The t-test for the slope in the AVP is similar to that in the full
+  model with the hypothesis that $\beta_j=0$
+- The $R^2$ of the AVP for $X_j$ is the partial correlation between the
+  response and $X_j$ adjusted for all the other terms in the model
+
+Again we have the example of AVP’s in the second simulated data set to
+show the results
+
+``` r
+summary(lm(summary(M1)$residuals~summary(M3)$residuals))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = summary(M1)$residuals ~ summary(M3)$residuals)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -2.47763 -0.60187 -0.02853  0.69203  2.81293 
+    ## 
+    ## Coefficients:
+    ##                         Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)           -4.083e-16  9.301e-02    0.00        1    
+    ## summary(M3)$residuals  1.028e+00  2.478e-02   41.48   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.9301 on 98 degrees of freedom
+    ## Multiple R-squared:  0.9461, Adjusted R-squared:  0.9456 
+    ## F-statistic:  1721 on 1 and 98 DF,  p-value: < 2.2e-16
+
+``` r
+summary(lm(Y~X1+X3))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Y ~ X1 + X3)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -2.47763 -0.60187 -0.02853  0.69203  2.81293 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   2.8608     0.1111   25.76   <2e-16 ***
+    ## X1            1.9313     0.1207   15.99   <2e-16 ***
+    ## X3            1.0278     0.0249   41.27   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.9348 on 97 degrees of freedom
+    ## Multiple R-squared:  0.9818, Adjusted R-squared:  0.9815 
+    ## F-statistic:  2620 on 2 and 97 DF,  p-value: < 2.2e-16
+
+\###cPrediction, Fitted Values and Linear Combinations
+
+Again prediction and confidence intervals take on a similar form as in
+SLR just in matrix notation. For the prediction interval we have that
+the standard error becomes $$
+sepred(\tilde{y}_* \mid x_*)=\hat{\sigma}\sqrt{1+ x^T_*(X^TX)^{-1}x_*}
+$$
+
+The corresponding standard error for the fitted value is calculated
+directly as $$
+sefit(hat{y} \mid x)=\hat{\sigma}\sqrt{x^T(X^TX)^{-1}x}
+$$
+
+So we can see that the $sepred$ can be written as $$
+sepred(\tilde{y}_* \mid x_*)=\sqrt{\hat{\sigma}^2+ sefit(\tilde{y}_* \mid x_*)^2}
+$$
+
+Again we look at using the predict function in R, notice for the $ppgdp$
+we do not use $\log(ppgdp)$
+
+``` r
+predict(Mod1,data.frame(lifeExpF=76, ppgdp=14690),interval="confidence")
+```
+
+    ##         fit       lwr       upr
+    ## 1 0.7335503 0.6893725 0.7777281
+
+``` r
+predict(Mod1,data.frame(lifeExpF=76, ppgdp=14690),interval="prediction")
+```
+
+    ##         fit      lwr      upr
+    ## 1 0.7335503 0.242559 1.224542
+
+### The Bootstrap
+
+The bootstrap provides a computationally intense method for getting
+around using normal assumptions for confidence intervals. The bootstrap
+also works when standard methods don’t really work for the data set on
+hand, or methods are questionable.
+
+Bootstrap is based on resampling and computer simulation. For the basic
+plan of bootstrap for the median look see your text. For the moment we
+will restrict our discussion to the regression case, in what is known as
+the case resampling bootstrap. The main idea is to take the sample you
+have and create $B$ data sets. Then preform regression on the created
+data sets which will create a distribution of the coefficients of
+interest. The full procedure is
+
+1.  Number the observations from 1 to $n$. Take a random sample WITH
+    REPLACEMENT of size $n$. The probability of the $j$th entry of the
+    new data is equally as likely to be any of the $n$ cases in the
+    original data.
+
+2.  Create a dataset based on the sample with replacement. The numbers
+    that appear in the sample are the $n$ observations we use for the
+    new data set.
+
+3.  Repeat steps 1 and 2 $B$ times
+
+4.  Run our regression model and create an ordering of each coefficent
+    from smallest to largest. Estimate a $95\%$ CI for each coefficient
+    by finding the 2.5 and 97.5 percentiles of the empirical estimates
+    (estimates from the data). We tend to also report the average/median
+    of each of these estimates.
+
+There are a bias correction methods for this. We can set $B$ to be
+anything we would like but normally it’s $B=999$, for simplicity of
+calculating the 97.5 and 2.5 percentile. Other methodology also uses
+large sample theory in the CI’s but use the bootstrap standard errors to
+calculate them.
+
+The bootstrap is also useful for when large sample theory fails us so
+when we need to understand the ratio of coefficients we can again use
+the bootstrap. That is we don’t have a good standard error estimate for
+$\frac{\beta_j}{\beta_k}$, so the bootstrap bails us out.
+
+Testing with bootstrap is easy, all we ask is does the hypothesized
+value live in the bootstrap confidence interval.
+
+So to compare with large sample theory lets compare our confidence
+intervals for the UN Data between the normal approximation with large
+sample theory and the bootstrap.
+
+One of your homework problems for this section will to be calculate and
+interpert bootstrap confidence intervals for multiple linear regerssion
+models.
+
+Bootstrap is also useful for predictors that have measurement error. In
+this case we sample the data with normal (or some distribution) attached
+to the measurement. We also do the same thing for the predictor variable
+with another normal random variable. We then fit a line through the
+origin (OLS with no slope) and then bootstrap on that slope estimate.
+Overall this is similar to what we discussed earlier in the course with
+regard to bootstrap, you can also see the literature for more advanced
+methods of bootstrapping.
+
+## Interpretation and Visualization
+
+The mechanism of fitting linear regression models will stay the same
+when fitting MLR or SLR models. The one thing that will change in every
+data set ins the interpretation of your model. Every data set is
+different, the meanings we try and pull from tests and coefficients
+change for every new analysis.
+
+### Understand Parameter Estimates
+
+Let’s look at the result of a model a little more complex than what
+we’ve discussed in class previously
+
+``` r
+library(alr4)
+data(fuel2001)
+head(fuel2001)
+```
+
+    ##     Drivers    FuelC Income  Miles      MPC      Pop  Tax
+    ## AL  3559897  2382507  23471  94440 12737.00  3451586 18.0
+    ## AK   472211   235400  30064  13628  7639.16   457728  8.0
+    ## AZ  3550367  2428430  25578  55245  9411.55  3907526 18.0
+    ## AR  1961883  1358174  22257  98132 11268.40  2072622 21.7
+    ## CA 21623793 14691753  32275 168771  8923.89 25599275 18.0
+    ## CO  3287922  2048664  32949  85854  9722.73  3322455 22.0
+
+``` r
+fuel2001 <- transform(fuel2001,
+     Dlic=1000 * Drivers/Pop,
+     Fuel=1000 * FuelC/Pop,
+     Income=Income/1000)
+head(fuel2001)
+```
+
+    ##     Drivers    FuelC Income  Miles      MPC      Pop  Tax      Dlic     Fuel
+    ## AL  3559897  2382507 23.471  94440 12737.00  3451586 18.0 1031.3801 690.2644
+    ## AK   472211   235400 30.064  13628  7639.16   457728  8.0 1031.6411 514.2792
+    ## AZ  3550367  2428430 25.578  55245  9411.55  3907526 18.0  908.5972 621.4751
+    ## AR  1961883  1358174 22.257  98132 11268.40  2072622 21.7  946.5706 655.2927
+    ## CA 21623793 14691753 32.275 168771  8923.89 25599275 18.0  844.7033 573.9129
+    ## CO  3287922  2048664 32.949  85854  9722.73  3322455 22.0  989.6062 616.6115
+
+``` r
+FuelMod<-lm(Fuel~Tax+Dlic+Income+log(Miles), data=fuel2001)
+summary(FuelMod)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Fuel ~ Tax + Dlic + Income + log(Miles), data = fuel2001)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -163.145  -33.039    5.895   31.989  183.499 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) 154.1928   194.9062   0.791 0.432938    
+    ## Tax          -4.2280     2.0301  -2.083 0.042873 *  
+    ## Dlic          0.4719     0.1285   3.672 0.000626 ***
+    ## Income       -6.1353     2.1936  -2.797 0.007508 ** 
+    ## log(Miles)   26.7552     9.3374   2.865 0.006259 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 64.89 on 46 degrees of freedom
+    ## Multiple R-squared:  0.5105, Adjusted R-squared:  0.4679 
+    ## F-statistic: 11.99 on 4 and 46 DF,  p-value: 9.331e-07
+
+The right hand side of the equation is interpreted in terms of the
+response. So in terms of the fuel problem everything is interpreted in
+gallons. Again we “could” interpret the intercept as the gallons used in
+a state with no tax, no drives, no income and no roads. Think that
+exists? Our interpretation would make no sense so we again think of it
+as a tuning parameter. The other coefficients must be interpreted in
+gallons but we also need notice what the predictor variable the
+coefficient is associated with means. For instance the coefficient for
+$Tax$ is interpreted in gallons per cent of tax. Since $Tax$ is in
+cents.
+
+### Rate of Change
+
+We’ve talked about interpreting the $\beta_j$ coefficient as the
+“average increase (decrease) of $Y$ (in the units of $Y$) given that
+$X_j$ is increased one unit. Fuel in this case is in per person. So the
+coefficient with $Tax$ is interpreted as ;” We expect to see on average
+a 4.23 gallon per person decrease given that the tax rate is increased
+one cent and all other factors are held constant.” In SLR it’s easy to
+visualize what the effect of the variable is. In MLR especially when
+$p>2$ it is a little harder, what we can do is fix all of the other
+variables we are not interested in, and then look at a plot of the
+variable of interest against the response.
+
+For example lets fix all of the variables associated with the fuel model
+except for $Tax$ so what we get is $$
+\hat{E}(Fuel \mid Tax, \bar{Dlic},\bar{Income},\bar{\log(Miles)})\\
+=154.2 -4.2Tax+.47\bar{Dlic}-6.1\bar{Income}+26.8\bar{\log(Miles)}\\
+=606.9-4.2Tax
+$$
+
+We can see that once we fix all the other variables but $Tax$ we have an
+equation the form of SLR. So we can plot the line and give a $95\%$ CI
+for the pointwise estimates of $Tax$, given the mean of all the other
+variables. We can plot this using the following command which results in
+Figure 1
+
+``` r
+plot(Effect("Tax",FuelMod))
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+
+Based on the effect plot above can we say that higher tax rate causes
+lower fuel consumption? No! We observe that states with higher tax rates
+have lower fuel consumption, so we can say there is an association, but
+we can’t infer causation. To be able to discuss causation we need to in
+fact increase or decrease the tax rate and observe the result. Causation
+is EXTREMELY difficult to get from observational data. We’ll talk more
+about this later.
+
+### Signs of Estimates
+
+The sign of the estimate of $\beta_j$ gives us the direction of the
+relationship between $X_j$ and $Y$. If all the terms are independent of
+one another, the sign of $\beta_j$ is the sign of the correlation. If
+there is some correlation between predictors signs can change based on
+what other terms are in the model. This makes interpretation difficult.
+Imagine having to explain a negative coefficient on a variable that is
+known to have a positive correlation with the response. This is one of
+the reasons that in the instance of correlated variables we need to find
+something else to do. Also we know that if two variables are correlated
+it is hard for the interpretation of fixing all other variables to make
+sense. In other words correlated variables are harder to deal with than
+just putting them in the model.
+
+### Interpretation with Changing Terms
+
+For this section lets look at an example from Sandy Weisberg’s
+regression text book. We define 2 new variables D9 and D18 which are the
+weight differences at age 9 and 18 for the girls in the Berkley Guidance
+Study (the BGSgirls data in the alr4 package). In this case we will fit
+3 models.
+
+1.  Model 1 has all 3 weight variables
+2.  Model 2 has $WT2$ $DW9$ and $DW18$
+3.  Model 3 uses all weight variables, $DW9$, $DW18$.
+
+Let’s compare the estimates for each of the models so we have
+
+``` r
+library(alr4)
+```
+
+    ## Loading required package: car
+
+    ## Loading required package: carData
+
+    ## Loading required package: effects
+
+    ## lattice theme set by effectsTheme()
+    ## See ?effectsTheme for details.
+
+    ## 
+    ## Attaching package: 'alr4'
+
+    ## The following object is masked _by_ '.GlobalEnv':
+    ## 
+    ##     fuel2001
+
+``` r
+attach(BGSgirls)
+names(BGSgirls)
+```
+
+    ##  [1] "WT2"   "HT2"   "WT9"   "HT9"   "LG9"   "ST9"   "WT18"  "HT18"  "LG18" 
+    ## [10] "ST18"  "BMI18" "Soma"
+
+``` r
+## Difference of weight between age 9 and 2
+DW9=WT9-WT2
+## Difference of Weight between age 18 and 9
+DW18=WT18-WT9
+
+m1=lm(BMI18~WT2+WT9+WT18, data=BGSgirls)
+m2=lm(BMI18~WT2+DW9+DW18,data=BGSgirls)
+m3=lm(BMI18~WT2+WT9+WT18+DW9+DW18,data=BGSgirls)
+
+compareCoefs(m1,m2,m3)
+```
+
+    ## Calls:
+    ## 1: lm(formula = BMI18 ~ WT2 + WT9 + WT18, data = BGSgirls)
+    ## 2: lm(formula = BMI18 ~ WT2 + DW9 + DW18, data = BGSgirls)
+    ## 3: lm(formula = BMI18 ~ WT2 + WT9 + WT18 + DW9 + DW18, data = BGSgirls)
+    ## 
+    ##             Model 1 Model 2 Model 3
+    ## (Intercept)    8.31    8.31    8.31
+    ## SE             1.66    1.66    1.66
+    ##                                    
+    ## WT2         -0.3866 -0.0678 -0.3866
+    ## SE           0.1515  0.1275  0.1515
+    ##                                    
+    ## WT9          0.0314          0.0314
+    ## SE           0.0494          0.0494
+    ##                                    
+    ## WT18          0.287           0.287
+    ## SE            0.026           0.026
+    ##                                    
+    ## DW9                  0.3189 aliased
+    ## SE                   0.0386        
+    ##                                    
+    ## DW18                  0.287 aliased
+    ## SE                    0.026        
+    ## 
+
+The first thing we see is that the estimate for $WT2$ in model 2 is
+different than that of the other 2 models. Is there any intution why? It
+is due to the fact that $DW9$ includes information about from $WT2$.
+Also notice the fact that $WT18$ in model 1 and model 3 and $DW18$ in
+model 2 share coefficients. This is the fact that the only $DW18$ can
+increase 1 KG with all other variables fixed is to increase $WT18$ by
+one unit. The moral of the story is using the same information in
+different ways can result in different coefficients, which results in
+different inference. Also note that $R^2$ and $\sigma^2$ are the same
+for all 3 models.
+
+### Over-Parameterized Mean Functions
+
+The last thing we should notice is model 3 when inputted into R had 6
+coefficients, but the resulting output has 4. Why is the major question?
+The answer is because we have a rank deficient or over-parameterized
+model. The idea is we have a variable(s) that is a linear combination of
+variables that are already in the model, this is called linear
+dependence. So what we don’t want is given $X_1$ and $X_2$ are already
+in our model is some $X_3=aX_1+bX_2$ where a and b are constants. What
+this means is since we know the coefficients for $X_1$ and $X_2$ there
+is no need to estimate one for $X_3$ and no information we need. Note
+that this is completely different than using unimportant variables in a
+model. This says nothing about the test what it says is that no estimate
+can be calculated for $X_3$.
+
+With this in mind model 3 is over-parameterized in two ways.
+$DW18=WT18-WT9$ and $DW9=WT9-WT2$, where all 3 weight variables are
+already in the model. This means that we can’t estimate coefficients for
+$DW18$ or $DW9$. We will discuss this more in Chapter 5 when we discuss
+factors in Regression. As for the R code when an over-parameterized
+model appears we see an $NA$, the following is the output for Model 3
+
+``` r
+summary(m3)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = BMI18 ~ WT2 + WT9 + WT18 + DW9 + DW18, data = BGSgirls)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.1037 -0.7432 -0.1240  0.8320  4.3485 
+    ## 
+    ## Coefficients: (2 not defined because of singularities)
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  8.30978    1.65517   5.020 4.16e-06 ***
+    ## WT2         -0.38663    0.15145  -2.553    0.013 *  
+    ## WT9          0.03141    0.04937   0.636    0.527    
+    ## WT18         0.28745    0.02603  11.044  < 2e-16 ***
+    ## DW9               NA         NA      NA       NA    
+    ## DW18              NA         NA      NA       NA    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.333 on 66 degrees of freedom
+    ## Multiple R-squared:  0.7772, Adjusted R-squared:  0.767 
+    ## F-statistic: 76.73 on 3 and 66 DF,  p-value: < 2.2e-16
+
+Notice the $NA$’s associated with $DW9$ and $DW18$, again we will return
+to this in chapter 5.
+
+### Log Transformations
+
+The fuel data uses a log transformation of the variable miles to create
+the linear model. Log transformation are useful when the variables take
+on a large range of values, typically when the ratio of the max to min
+is around 100. It also needs some interpretation work, taking the
+natural log of a variable isn’t intuitive to most people. To increase
+log(miles) one unit, miles basically has to double. Sometimes this is
+the reason we use log base 2 instead of the natural log. But the easiest
+interpetation for the model is to saw when miles double. We can also
+show an effect plot as we did for $Tax$. See Figure 2 for this example.
+Since $\log(Miles)$ is tough to interpret showing this plot could help
+dramatically, since the sale is in miles.
+
+``` r
+plot(Effect("Miles",FuelMod))
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+
+We can also have problems when the predictor is transformed. Think back
+to our UN example for chapter 3. For instance the interpretation of a
+model where we use $\log(Y)$ is the response since when we interpret
+coefficients all other coefficients are fixed we will just use the SLR
+setting. Let our equation be $$ 
+E(\log(Y) \mid X)=\beta_0+\beta_1X\\
+E(Y \mid X)=e^{\beta_0+\beta_1X}\\
+$$
+
+When we look at what happens when we make $X=x+1$ we have $$
+E(\log(Y) \mid X=x+1)=\beta_0+\beta_1(x+1)\\
+E(Y \mid X)=e^{\beta_0+\beta_1(x+1)}\\
+=e^{\beta_0+\beta_1x+\beta_1)}\\
+=e^{\beta_1}e^{\beta_0+\beta_1X}\\
+=e^{\beta_1}E(Y \mid X)
+$$
+
+This also has an interpretation as the rate of change, see your text for
+the full calculation, but the idea is that the percent increase/decrease
+of $Y$ when $X_j$ is increased by 1 unit is equivalent to $$
+100(e^{\beta_1}-1)
+$$
+
+To see more examples of these cases lets look back at the UN data
+example when both $\log(ppgdp)$ and $lifeExpF$ are in the model.
+
+``` r
+ModUN=lm(log(fertility)~log(ppgdp)+lifeExpF,data=UN11)
+summary(ModUN)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(fertility) ~ log(ppgdp) + lifeExpF, data = UN11)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.61778 -0.16891  0.03731  0.17591  0.61072 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  3.50736    0.12707  27.601  < 2e-16 ***
+    ## log(ppgdp)  -0.06544    0.01781  -3.675 0.000307 ***
+    ## lifeExpF    -0.02824    0.00274 -10.306  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.248 on 196 degrees of freedom
+    ## Multiple R-squared:  0.6926, Adjusted R-squared:  0.6894 
+    ## F-statistic: 220.8 on 2 and 196 DF,  p-value: < 2.2e-16
+
+How do we interpret this model? Take a shot at interepreting both
+variables.
+
+### Experimentation vs Observation
+
+Up to this point we have briefly discussed the fact that the data we
+have used does not lend its self to causal inference. This means we can
+say that $X$ and $Y$ have an association with $\beta_j$ being the
+coefficient. To gain causation, we need to use experimental data not
+causal data. Up to this point we have thought of $X_j$ as being a random
+variable, but what if it is not random at all. What if an experimenter
+sets what $X_j$ can be, meaning $X_j$ is no longer a random variable and
+then observes $Y$. This lends itself to inferring causality, because we
+can control all other variables that can effect our outcome, and can
+only change $X_j$. We can say then $X_j$ produces some result in $Y$.
+
+This assumption seems ridiculous in an observational study because in
+reality the analyst/scientist has no control over any of the variables.
+There has been alot of study on how to use observational data in
+causality, but it requires additional assumptions on future predictions
+of the data and very specific cases. See your text for a reference on
+this material.
+
+One major issue we have with inferring causality is that we miss the
+major variable that is causing the effect on $Y$. We know adding a
+variable will change our inference dramatically, just think about the
+implications if it is important to the mean function. This is what we
+refer to as a lurking variable. When we leave lurking variables out we
+bias our model, the model is incorrect, therefore the inference we make
+in a causal form won’t be correct.
+
+### Comments on $R^2$
+
+$R^2$ is probably one of the most cited but most misunderstood values in
+regression. The main thing it always is, is the percent of variability
+in $Y$ that we have explained using the model, based on the sample. This
+value can be deceiving because what if your model is wrong, what if a
+quadratic term is needed or you need a log transformation on the
+response or $X$. If the data is from a multivariate normal it is also
+dependent on the sampling plan, if your sampling is taken over too small
+of a region of $X$ it is likely that your $R^2$ will be small because
+the variation of $Y$ will not be large, and if you sample over to large
+of a range of $X$ any $Y$ has high variability, your $R^2$ will be
+inflated just due to the variability of $Y$.
+
+#### $R^2$ in SLR
+
+$R^2$ in SLR is useful because we have a diagnostic to see if your model
+is wrong. We can plot our data with the SLR line through it, and see if
+the model fits the data. We can also compare it to a smoother. If we
+remember $R_{XY}^2=Cor^2(X,Y)$ then $R^2$ only means something when
+correlation is the correct measure of the relationship, specifically
+when the relationship is a straight line. If the line isn’t straight or
+the model is wrong $R^2$ doesn’t mean anything.
+
+#### $R^2$ in MLR
+
+$R^2$ is the squared correlation between $Y$ and the fitted values
+$\hat{Y}$. This means that plotting the fitted values of $Y$ against
+$\hat{Y}$, if it looks like this plot comes from a normal population,
+then $R^2$ is representative of the population. If it is not it depends
+on the sampling plan again. $R^2$ applies to other regression methods
+such as non-linear regression as well. This does not extend to all
+regression methods though, like binary regression/ logistic regression.
+
+It also does not apply to regression through the origin (without an
+intercept). $R^2$ for MLR with a intercept is what is called invariant,
+meaning that if we change the scale of the response , say from Celsius
+to Fahrenheit (scaled) the $R^2$ won’t change. If we change the
+intercept this is no longer true, so we shouldn’t use $R^2$ for
+regression without an intercept.
+
+## Orange Juice
+
+In this file we’re going to begin to analyze the price elasticity of
+orange juice based on brand and price as it relates to sales.
+
+``` r
+oj <- read.csv("oj.csv")
+oj$brand=as.factor(oj$brand)
+head(oj)
+```
+
+    ##   sales price     brand feat
+    ## 1  8256  3.87 tropicana    0
+    ## 2  6144  3.87 tropicana    0
+    ## 3  3840  3.87 tropicana    0
+    ## 4  8000  3.87 tropicana    0
+    ## 5  8896  3.87 tropicana    0
+    ## 6  7168  3.87 tropicana    0
+
+``` r
+summary(oj)
+```
+
+    ##      sales            price               brand           feat       
+    ##  Min.   :    64   Min.   :0.520   dominicks  :9649   Min.   :0.0000  
+    ##  1st Qu.:  4864   1st Qu.:1.790   minute.maid:9649   1st Qu.:0.0000  
+    ##  Median :  8384   Median :2.170   tropicana  :9649   Median :0.0000  
+    ##  Mean   : 17312   Mean   :2.282                      Mean   :0.2373  
+    ##  3rd Qu.: 17408   3rd Qu.:2.730                      3rd Qu.:0.0000  
+    ##  Max.   :716416   Max.   :3.870                      Max.   :1.0000
+
+Next lets take a look at how the data moves and changes when we start to
+look at how price relates to sales.
+
+``` r
+## create some colors for the brands
+brandcol <- c("green","red","gold")
+par(mfrow=c(1,3))
+plot(sales ~ price, data=oj, col=brandcol[oj$brand])
+plot(log(sales)~price,data=oj,col=brandcol[oj$brand])
+plot(log(sales) ~ log(price), data=oj, col=brandcol[oj$brand])
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+
+In regression in this case we have a few options, we could say that
+
+$$
+Sales=\beta_0+\beta_1Price+\epsilon
+$$ If we choose to say this Sales change at a linear function of price.
+So we interpret $\beta_1$ as the expected change in sales given that
+$Price$ is increased by 1 dollar (generically we’d say one unit). The
+intercept in this case $\beta_0$ is the expected $Sales$ when $Price=0$.
+We never observe $Price=0$, and further more do we think this model
+would describe the behavior of something that is free? I don’t think so,
+so in this case we’ll just say “it’s a tuning parameter” which means it
+just helps us fit the data better. Let’s take a look at what this
+analysis would look like
+
+``` r
+m1<-lm(sales~price,data=oj)
+summary(m1)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = sales ~ price, data = oj)
+    ## 
+    ## Residuals:
+    ##    Min     1Q Median     3Q    Max 
+    ## -36905 -13293  -4525   4820 679255 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  52365.0      551.2    95.0   <2e-16 ***
+    ## price       -15357.3      232.3   -66.1   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 25610 on 28945 degrees of freedom
+    ## Multiple R-squared:  0.1312, Adjusted R-squared:  0.1311 
+    ## F-statistic:  4370 on 1 and 28945 DF,  p-value: < 2.2e-16
+
+Now based on these results we see that we have the intercept equal to
+$\beta_0=52365$ and the slope $\beta_1=-15357.30$. So what that means in
+this case is that for every one dollar increase in price we expect sales
+to decrease by \$15,357.30. So our prediction equation is
+
+$$
+\widehat{Sales}=52365 -15357.30*Price,
+$$ where \$ is the predicted value. Let’s look at this line and how it
+fits the data
+
+``` r
+plot(sales~price,data=oj,col=brandcol[oj$brand])
+abline(m1,lwd=3)
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-34-1.png)<!-- --> Not the
+best fit right? We know from above that we have better options so let’s
+take a look at using the transformations (i.e feature engineering) to
+leverage better insight.
+
+Another option we have to fit this data is to look at
+
+$$
+\log(Sales)=\beta_0+\beta_1Price
+$$
+
+Now first thing you may ask yourself is why would you ever want to do
+this? Well let me write it slightly different
+
+$$
+Sales=e^{\beta_0+\beta_1Price}
+$$ Now we can see what it says is that sales moves exponentially with
+prices. We would want to model this when we have multiplictive trends.
+How do we know when that happens? Well when the current value of
+something matters on an increase or decrease. So think of this
+statement, “Foreclosed homes sell at a 20%-30% discount”. That’s saying
+that the original price sets the standard and then we determine the new
+price off of that right. In this case what if we say the decrease in
+sales could change at a different if you’re current sales are \$100,000
+than when it’s \$500,000. That’s a multiplicitive trend.
+
+We say we expect a $(e^{\beta_{1}}-1)*100\%$ change in Sales given Price
+is increased by one dollar in this model. Again the intercept is just
+the expected Sales given $Price$ is 0, so not really a great meaning.
+Let’s look at how we analyze this data.
+
+``` r
+m2<-lm(log(sales)~price,data=oj)
+summary(m2)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(sales) ~ price, data = oj)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.9223 -0.5964 -0.0327  0.5853  3.7197 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) 10.718947   0.019786  541.74   <2e-16 ***
+    ## price       -0.679558   0.008339  -81.49   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.9194 on 28945 degrees of freedom
+    ## Multiple R-squared:  0.1866, Adjusted R-squared:  0.1866 
+    ## F-statistic:  6641 on 1 and 28945 DF,  p-value: < 2.2e-16
+
+So looking at these results we see the prediction equation is
+
+$$
+\widehat{log(Sales)}=10.718-0.679558*Price
+$$ Or
+
+$$
+\widehat{Sales}=e^{10.718-0.679558*Price}
+$$
+
+Now if we interpret this we can say that we see a $(e^{-0.679558}-1)\%$
+change in sales given price increase \$1. If we just do that calculation
+we get
+
+``` r
+exp(-.679558)-1
+```
+
+    ## [1] -0.493159
+
+Which is about a 49% decrease in the sales. Looking at this on a plot we
+see that is
+
+``` r
+plot(log(sales)~price,data=oj,col=brandcol[oj$brand])
+abline(m2)
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+
+The last way we can look at this data is to think of it in what is
+called a log-log model. That is
+
+$$
+log(Sales)=\beta_0+\beta_1log(Price)+\epsilon
+$$
+
+Where this is useful is when a percentage change in the predictor causes
+a percentage change in the response. So if we look at it like this
+
+$$
+\widehat{Sales}=e^{\beta_0}Price^{\beta_1}
+$$ So it allows us to model non linear trends and complexity in data.
+The way we interpret $\beta_1$ (the slope) in this model is for every 1%
+increase in Price we see sales increase by $\beta_1$%. Simple enough and
+really powerful to say. Again the intercept doesn’t really help because
+it describes a price of 1. Let’s analyze the data this way.
+
+``` r
+m3=lm(log(sales)~log(price),data=oj)
+summary(m3)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log(sales) ~ log(price), data = oj)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.0441 -0.5853 -0.0330  0.5756  3.7264 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) 10.42342    0.01535  679.04   <2e-16 ***
+    ## log(price)  -1.60131    0.01836  -87.22   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.9071 on 28945 degrees of freedom
+    ## Multiple R-squared:  0.2081, Adjusted R-squared:  0.2081 
+    ## F-statistic:  7608 on 1 and 28945 DF,  p-value: < 2.2e-16
+
+So we have that
+
+$$
+\widehat{log(Sales)}=10.42342-1.60131*log(Price)
+$$
+
+Or
+
+$$
+\widehat{Sales}=e^{10.42342}Price^{-1.60131}.
+$$ So what this means is that if we increase Price by 1% we expect to
+see a 1.6% decrease in Sales. Really nice statement to be able to make
+for someone to understand. Now let’s look at it.
+
+``` r
+plot(log(sales)~log(price),data=oj,col=brandcol[oj$brand])
+abline(m3)
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+
+Now let’s take a quick look at how each of these fits on the original
+data. To do this we’re going to look across the spectrum of prices from
+0 to 4 (thats our min and max prices in the data) and then look at what
+the curve shows on the original data.
+
+First I’ll create predictions for each model so we can have predicted
+values across the space since we can’t plot the transformation on the
+original data with abline. Since m2 and m3 have log responses we need to
+raise them to the exponent.
+
+``` r
+x=seq(0.0001,4, by=.001)
+m1p=predict(m1,newdata=data.frame(price=x))
+m2p=exp(predict(m2,newdata=data.frame(price=x)))
+m3p=exp(predict(m3,newdata=data.frame(price=x)))
+```
+
+Next we’re going to create each line in a way that allows us to see it
+on the original data
+
+``` r
+plot(sales~price,data=oj)
+lines(m1p~x,col=4)
+lines(m2p~x,col=5,lwd=3)
+lines(m3p~x,col=6,lwd=4)
+```
+
+![](Module2_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+
+Dark blue is the straight line, the light blue is the log response, and
+the purple is log-log. Which one would you pick? How would you decide?
+This might be something that is the hardest question in statistics,
+machine learning, and AI. This is something we will get into as we go,
+but it’s good to start thinking about now.
