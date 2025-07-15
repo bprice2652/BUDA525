@@ -285,16 +285,35 @@ residuals. Looking at the figure above we can compare the variance of
 $Y$ to the variance of the residuals. This makes sense to use because
 the conditional distribution at the point $x_i$, is the same as the
 residual for the point $y_i$. We will discuss this more in-depth as the
-courese goes on.
+course goes on.
 
 ``` r
-var(model$residuals)
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following object is masked from 'package:car':
+    ## 
+    ##     recode
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+model$residuals%>%var()
 ```
 
     ## [1] 0.0008243385
 
 ``` r
-var(Y)
+Y%>%var
 ```
 
     ## [1] 21.76765
@@ -527,10 +546,11 @@ weight of Australian athletes. First we will load the data and take a
 look at the summary.
 
 ``` r
+library(dplyr)
 library(alr4)
 data(ais)
 attach(ais)
-summary(ais)
+ais%>%summary()
 ```
 
     ##       Sex              Ht              Wt              LBM        
@@ -626,25 +646,25 @@ SXY=cov(Ht,Wt)*(n-1)
 
     ## [1] -126.189
 
-Next le’ts use the lm function in R to show the same thing. Notice we
+Next let’s use the lm function in R to show the same thing. Notice we
 will also see what we have access to from lm, and summary of an lm. This
 is extremely important to remember as you can get residuals and
 coefficients quickly, as well as fitted values.
 
 ``` r
-(mod=lm(Wt~Ht))
+(mod=lm(Wt~Ht,data=ais))
 ```
 
     ## 
     ## Call:
-    ## lm(formula = Wt ~ Ht)
+    ## lm(formula = Wt ~ Ht, data = ais)
     ## 
     ## Coefficients:
     ## (Intercept)           Ht  
     ##    -126.189        1.117
 
 ``` r
-names(mod)
+mod%>%names()
 ```
 
     ##  [1] "coefficients"  "residuals"     "effects"       "rank"         
@@ -652,12 +672,12 @@ names(mod)
     ##  [9] "xlevels"       "call"          "terms"         "model"
 
 ``` r
-summary(mod)
+mod%>%summary()
 ```
 
     ## 
     ## Call:
-    ## lm(formula = Wt ~ Ht)
+    ## lm(formula = Wt ~ Ht, data = ais)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
@@ -675,7 +695,7 @@ summary(mod)
     ## F-statistic: 312.6 on 1 and 200 DF,  p-value: < 2.2e-16
 
 ``` r
-names(summary(mod))
+mod%>%summary()%>%names()
 ```
 
     ##  [1] "call"          "terms"         "residuals"     "coefficients" 
@@ -688,7 +708,7 @@ the code below.
 
 ``` r
 plot(Wt~Ht,main="AIS Example",data=ais)
-abline(mod)
+mod%>%abline()
 ```
 
 ![](Module2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
@@ -971,12 +991,12 @@ but we can say that we are 95% confident that the true slope coefficient
 is between .992 and 1.24. Theoretically this looks great
 
 ``` r
-summary(mod)
+mod%>%summary()
 ```
 
     ## 
     ## Call:
-    ## lm(formula = Wt ~ Ht)
+    ## lm(formula = Wt ~ Ht, data = ais)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
@@ -994,7 +1014,7 @@ summary(mod)
     ## F-statistic: 312.6 on 1 and 200 DF,  p-value: < 2.2e-16
 
 ``` r
-confint(mod)
+mod%>%confint()
 ```
 
     ##                    2.5 %      97.5 %
@@ -1057,14 +1077,14 @@ Below we have the example of a prediction interval and confidence
 interval
 
 ``` r
-predict(mod,newdata=data.frame(Ht=200))
+mod%>%predict(newdata=data.frame(Ht=200))
 ```
 
     ##        1 
     ## 97.23437
 
 ``` r
-predict(mod,newdata=data.frame(Ht=200),interval="prediction",se.fit=TRUE)
+mod%>%predict(newdata=data.frame(Ht=200),interval="prediction",se.fit=TRUE)
 ```
 
     ## $fit
@@ -1081,7 +1101,7 @@ predict(mod,newdata=data.frame(Ht=200),interval="prediction",se.fit=TRUE)
     ## [1] 8.720304
 
 ``` r
-predict(mod,newdata=data.frame(Ht=200),interval="confidence",se.fit=TRUE)
+mod%>%predict(newdata=data.frame(Ht=200),interval="confidence",se.fit=TRUE)
 ```
 
     ## $fit
@@ -1099,18 +1119,10 @@ predict(mod,newdata=data.frame(Ht=200),interval="confidence",se.fit=TRUE)
 
 ``` r
 attach(ais)
-```
-
-    ## The following objects are masked from ais (pos = 3):
-    ## 
-    ##     Bfat, BMI, Ferr, Hc, Hg, Ht, Label, LBM, RCC, Sex, Sport, SSF, WCC,
-    ##     Wt
-
-``` r
 plot(Wt~Ht,xlab="Height",ylab="Height",main="Example of Confidence and Prediction Bands", data=ais)
-abline(mod)
-CI=predict(mod,interval="confidence")
-PI=predict(mod,data.frame(Ht=148:210),interval="prediction")
+mod%>%abline()
+CI=mod%>%predict(interval="confidence")
+PI=mod%>%predict(data.frame(Ht=148:210),interval="prediction")
 lines(x=Ht,y=CI[,2],col=2)
 lines(x=Ht,y=CI[,3],col=2)
 lines(x=148:210,y=PI[,2],col=3)
@@ -1364,7 +1376,7 @@ head(UN11)
 
 ``` r
 Mod1=lm(log(fertility)~lifeExpF+log(ppgdp))
-summary(Mod1)
+Mod1%>%summary()
 ```
 
     ## 
@@ -1389,7 +1401,7 @@ summary(Mod1)
 
 ``` r
 Mod2=lm(log(fertility)~log(ppgdp))
-summary(Mod2)
+Mod2%>%summary()
 ```
 
     ## 
@@ -1412,7 +1424,7 @@ summary(Mod2)
     ## F-statistic: 218.6 on 1 and 197 DF,  p-value: < 2.2e-16
 
 ``` r
-avPlots(Mod1)
+Mod2%>%avPlots()
 ```
 
 ![](Module2_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
@@ -1729,7 +1741,7 @@ summary(lm(Y~X1+X3))
     ## Multiple R-squared:  0.9818, Adjusted R-squared:  0.9815 
     ## F-statistic:  2620 on 2 and 97 DF,  p-value: < 2.2e-16
 
-\###cPrediction, Fitted Values and Linear Combinations
+### Prediction, Fitted Values and Linear Combinations
 
 Again prediction and confidence intervals take on a similar form as in
 SLR just in matrix notation. For the prediction interval we have that
@@ -1750,14 +1762,14 @@ Again we look at using the predict function in R, notice for the $ppgdp$
 we do not use $\log(ppgdp)$
 
 ``` r
-predict(Mod1,data.frame(lifeExpF=76, ppgdp=14690),interval="confidence")
+Mod1%>%predict(data.frame(lifeExpF=76, ppgdp=14690),interval="confidence")
 ```
 
     ##         fit       lwr       upr
     ## 1 0.7335503 0.6893725 0.7777281
 
 ``` r
-predict(Mod1,data.frame(lifeExpF=76, ppgdp=14690),interval="prediction")
+Mod1%>%predict(data.frame(lifeExpF=76, ppgdp=14690),interval="prediction")
 ```
 
     ##         fit      lwr      upr
@@ -1934,7 +1946,7 @@ variables. We can plot this using the following command which results in
 Figure 1
 
 ``` r
-plot(Effect("Tax",FuelMod))
+Effect("Tax",FuelMod)%>%plot()
 ```
 
 ![](Module2_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
@@ -1978,25 +1990,6 @@ Let’s compare the estimates for each of the models so we have
 
 ``` r
 library(alr4)
-```
-
-    ## Loading required package: car
-
-    ## Loading required package: carData
-
-    ## Loading required package: effects
-
-    ## lattice theme set by effectsTheme()
-    ## See ?effectsTheme for details.
-
-    ## 
-    ## Attaching package: 'alr4'
-
-    ## The following object is masked _by_ '.GlobalEnv':
-    ## 
-    ##     fuel2001
-
-``` r
 attach(BGSgirls)
 names(BGSgirls)
 ```
@@ -2120,7 +2113,7 @@ Since $\log(Miles)$ is tough to interpret showing this plot could help
 dramatically, since the sale is in miles.
 
 ``` r
-plot(Effect("Miles",FuelMod))
+Effect("Miles",FuelMod)%>%plot()
 ```
 
 ![](Module2_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
