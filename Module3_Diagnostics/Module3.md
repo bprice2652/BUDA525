@@ -148,13 +148,36 @@ Let’s first look at the case when the mean function is not define
 correctly.
 
 ``` r
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following object is masked from 'package:MASS':
+    ## 
+    ##     select
+
+    ## The following object is masked from 'package:car':
+    ## 
+    ##     recode
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 set.seed(523)
 X=rnorm(100,4,2)
 Y=2+3*X+.5*I(X^2)+rnorm(100,0,.5)
 Mod1=lm(Y~X)
 par(mfrow=c(1,2))
 plot(Y~X)
-abline(Mod1)
+Mod1%>%abline()
 plot(Mod1$residuals~Mod1$fitted, xlab="Fitted Values", ylab="Residuals", 
 main="Residual Plot")
 ```
@@ -217,18 +240,6 @@ is happening in the problem. Let’s look at the big mac data.
 
 ``` r
 library(alr4)
-```
-
-    ## Loading required package: car
-
-    ## Loading required package: carData
-
-    ## Loading required package: effects
-
-    ## lattice theme set by effectsTheme()
-    ## See ?effectsTheme for details.
-
-``` r
 attach(BigMac2003)
 Mbm=lm(BigMac~log(Bread)+log(Rice))
 plot(Mbm$residuals~Mbm$fitted, xlab="Fitted Values", ylab="Residuals",
@@ -238,7 +249,7 @@ main="Big Mac Residual Plot")
 ![](Module3_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
-ncvTest(Mbm)
+Mbm%>%ncvTest()
 ```
 
     ## Non-constant Variance Score Test 
@@ -273,7 +284,7 @@ After the log transformations are the linearity and constant variance
 assumptions met? Easiest way to check again is
 
 ``` r
-ncvTest(Mbm2)
+Mbm2%>%ncvTest()
 ```
 
     ## Non-constant Variance Score Test 
@@ -299,7 +310,7 @@ back at our example we have that
 
 ``` r
 ModCurv=lm(Y~X+I(X^2))
-summary(ModCurv)
+ModCurv%>%summary()
 ```
 
     ## 
@@ -338,7 +349,7 @@ this in R we use the car package in R
 
 ``` r
 library(car)
-residualPlots(Mod1)
+Mod1%>%residualPlots()
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
@@ -451,7 +462,7 @@ for(i in 1:length(Age)){
 }
 
 Mod=lm(Scale~Age,weight=Wts)
-summary(Mod)
+Mod%>%summary()
 ```
 
     ## 
@@ -498,12 +509,12 @@ summary(lm(Scale~Age))
 
 Looking at the comparison we see that the fit changes. We also have that
 $$
-\Var(\hat{\beta}_{WLS})=\sigma^2(X^TWX)^{-1}
+Var(\hat{\beta}_{WLS})=\sigma^2(X^TWX)^{-1}
 $$
 
 ``` r
 plot(wblake$Scale~wblake$Age, main="Increasing Variance",xlab="Age",ylab="Length of Scale")
-abline(Mod)
+Mod%>%abline()
 abline(lm(Scale~Age))
 ```
 
@@ -530,7 +541,7 @@ plot(y~x,physics,type="b")
 m2<-lm(y~x,physics,weights=1/SD^2)
 m1<-lm(y~x+I(x^2),physics,weights=1/SD^2)
 lines(physics$x,m1$fitted,col=2,lty=2)
-abline(m2,col=3,lty=3)
+m2%>%abline(col=3,lty=3)
 m3<-lm(y~x+I(x^2),physics)
 lines(physics$x,m3$fitted,col=4,lty=4)
 legend("topleft",lty=c(2,3,4),col=c(2,3,4), legend=c("Quadratic WLS", "Linear WLS","Quadratic OLS" ))
@@ -543,7 +554,7 @@ seems to fit better in area with lower standard deviations which makes
 sense to us.
 
 ``` r
-summary(m1)
+m1%>%summary()
 ```
 
     ## 
@@ -567,7 +578,7 @@ summary(m1)
     ## F-statistic: 391.4 on 2 and 7 DF,  p-value: 6.554e-08
 
 ``` r
-summary(m2)
+m2%>%summary()
 ```
 
     ## 
@@ -638,7 +649,7 @@ is no great way to to define the variance at any given point but we do
 observed an overall trend. Look at the following plot.
 
 ``` r
-plot(cars, main="Stopping Distance of Cars")
+cars%>%plot(main="Stopping Distance of Cars")
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
@@ -666,7 +677,7 @@ Let’s look at three cases of mean weights for the car data using linear
 regression.
 
 ``` r
-plot(cars,main="Stopping Distance")
+cars%>%plot(main="Stopping Distance")
 Mc1=lm(dist~speed,cars,weights=1/abs(speed))
 Mc2=lm(dist~speed,cars,weights=1/speed^2)
 Mc3=lm(dist~speed,cars,weights=exp(speed))
@@ -730,7 +741,7 @@ The question becomes we can see that ncv is present how do we obtain a
 p-value for the NCV test.
 
 ``` r
-ncvTest(Mncv)
+Mncv%>%ncvTest()
 ```
 
     ## Non-constant Variance Score Test 
@@ -742,7 +753,7 @@ that the test is a function of the fitted values. What if we want to
 test that the NCV is a function of $X$ we do
 
 ``` r
-ncvTest(Mncv,~X)
+Mncv%>%ncvTest(~X)
 ```
 
     ## Non-constant Variance Score Test 
@@ -755,7 +766,7 @@ can define the weights correctly so fit the ols to be
 
 ``` r
 WLSM=lm(Y~X,weights=1/X^2)
-summary(WLSM)
+WLSM%>%summary()
 ```
 
     ## 
@@ -789,13 +800,13 @@ WLS model that we have previously defined.
 ``` r
 CIS=predict(WLSM,weights=1/exp(X),interval="confidence")
 plot(Y~X)
-abline(WLSM)
+WLSM%>%abline()
 points(X,CIS[,2],col=3)
 points(X,CIS[,3],col=4)
-PIS=predict(WLSM,weights=1/exp(X), interval="prediction")
+PIS=WLSM%>%predict(weights=1/exp(X), interval="prediction")
 ```
 
-    ## Warning in predict.lm(WLSM, weights = 1/exp(X), interval = "prediction"): predictions on current data refer to _future_ responses
+    ## Warning in predict.lm(., weights = 1/exp(X), interval = "prediction"): predictions on current data refer to _future_ responses
 
 ``` r
 points(X,PIS[,2],col=5)
@@ -805,15 +816,15 @@ points(X,PIS[,3],col=6)
 ![](Module3_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
-CIS=predict(Mncv, interval="confidence")
+CIS=Mncv%>%predict(interval="confidence")
 plot(Y~X)
 abline(Mncv)
 points(X,CIS[,2],col=3)
 points(X,CIS[,3],col=4)
-PIS=predict(Mncv,interval="prediction")
+PIS=Mncv%>%predict(interval="prediction")
 ```
 
-    ## Warning in predict.lm(Mncv, interval = "prediction"): predictions on current data refer to _future_ responses
+    ## Warning in predict.lm(., interval = "prediction"): predictions on current data refer to _future_ responses
 
 ``` r
 points(X,PIS[,2],col=5)
@@ -913,6 +924,13 @@ section.
 
 ### Variance Stabilizing Transformations
 
+To me this is one of the most important sections in the course, and
+maybe in statistical modeling. It’s really about how do we get a hold of
+variance to understand what is going on. From a practical standpoint
+this is my go to in modeling. Weighted least squares is a great tool,
+but practicality is limiting, you need to know it’s in the tool set, but
+transformations are broadly applicable.
+
 In this section we have seen a NCV test, but the question is how do we
 fix non-constant variance. We know that if we can define the the
 function of the variance as $Var(\epsilon)=\sigma^2g(x)$, where $g(x)>0$
@@ -970,7 +988,7 @@ the fuel data using
 ``` r
 data(fuel2001)
 FuelMod=lm(FuelC~Tax+log(Drivers)+log(Miles)+Income,data=fuel2001)
-residualPlot(FuelMod)
+FuelMod%>%residualPlot()
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-23-1.png)<!-- --> Let’s look
@@ -979,10 +997,10 @@ at both the square root and $\log$ transformations.
 ``` r
 par(mfrow=c(2,2))
 FuelL=lm(log(FuelC)~Tax+log(Drivers)+log(Miles)+Income, data=fuel2001)
-residualPlot(FuelL)
+FuelL%>%residualPlot()
 FuelS=lm(sqrt(FuelC)~Tax+log(Drivers)+log(Miles)+Income,data=fuel2001)
-residualPlot(FuelS)
-ncvTest(FuelL)
+FuelS%>%residualPlot()
+FuelL%>%ncvTest()
 ```
 
     ## Non-constant Variance Score Test 
@@ -1023,7 +1041,7 @@ of $Height~Dbh$
 
 ``` r
 c1 <- lm(Height ~ Dbh, ufcwc)
-   mmp(c1, ufcwc$Dbh, label="Diameter, Dbh", col.line=c("blue", "red"))
+   c1%>%mmp(ufcwc$Dbh, label="Diameter, Dbh", col.line=c("blue", "red"))
 ```
 
     ## Warning in plot.window(...): "label" is not a graphical parameter
@@ -1059,7 +1077,7 @@ will show an example of how to do this in R.
 
 ``` r
 m1 <- lm(log(fertility) ~ log(ppgdp) + pctUrban, UN11)
-mmps(m1)
+m1%>%mmps()
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
@@ -1068,7 +1086,7 @@ We can check the variance function as well, all we need to do is add the
 sd=TRUE statement to the code for the marginal model plot.
 
 ``` r
-mmps(m1, sd=TRUE)
+m1%>%mmps(sd=TRUE)
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
@@ -1076,7 +1094,7 @@ mmps(m1, sd=TRUE)
 And for the marginal model plot for the cedar tree data we have that
 
 ``` r
-mmp(c1, ufcwc$Dbh ,sd=TRUE)
+c1%>%mmp(ufcwc$Dbh ,sd=TRUE)
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
@@ -1294,7 +1312,7 @@ selection.
 
 ``` r
 M1=lm(BrainWt~log(BodyWt),data=brains)
-boxcox(M1)
+M1%>%boxcox()
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
@@ -1306,7 +1324,7 @@ regression problems.
 
 ``` r
 M2=lm(BigMac~log(Rice)+log(Bread), data=BigMac2003)
-summary(M2)
+M2%>%summary()
 ```
 
     ## 
@@ -1330,7 +1348,7 @@ summary(M2)
     ## F-statistic: 34.46 on 2 and 66 DF,  p-value: 5.657e-11
 
 ``` r
-boxcox(M2)
+M2%>%boxcox()
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
@@ -1342,8 +1360,7 @@ Let’s see what the inverse fitted value plot has to say about this
 transformation.
 
 ``` r
-#library(alr3)
-invResPlot(M2)
+M2%>%invResPlot()
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
@@ -1369,14 +1386,15 @@ un-transformed predictors $X$. we apply a modified power transformation
 to each $X_j$. So now we have $\lambda=(\lambda_1, \ldots, \lambda_k)$.
 Let $V(\lambda)$ be the covariance matrix of the transformed predictors,
 then we want to select a $\hat\lambda$ that minimizes the log
-determinent of $V$. This is all well and good and can easily be done
+determinant of $V$. This is all well and good and can easily be done
 using software.
 
 To do this in R we will look at an example from the Highway data in alr4
 package
 
 ``` r
-summary(powerTransform(cbind(len, adt, shld ,trks, sigs1) ~ 1, Highway1))
+#summary(powerTransform(cbind(len, adt, shld ,trks, sigs1) ~ 1, Highway1))
+Highway1%>%powerTransform(cbind(len, adt, shld ,trks, sigs1) ~ 1,.)%>%summary
 ```
 
     ## bcPower Transformations to Multinormality 
@@ -1581,16 +1599,9 @@ library(car)
 library(MASS)
 data(rat)
 attach(rat)
-```
-
-    ## The following object is masked from brains:
-    ## 
-    ##     BodyWt
-
-``` r
 Model2=lm(y~BodyWt+LiverWt+Dose,data=rat)
 help(outlierTest)
-outlierTest(Model2)
+Model2%>%outlierTest()
 ```
 
     ## No Studentized residuals with Bonferroni p < 0.05
@@ -1599,7 +1610,7 @@ outlierTest(Model2)
     ## 19 2.138833           0.050557      0.96058
 
 ``` r
-Jack=rstudent(Model2)
+Jack=Model2%>%rstudent()
 plot(Model2$res,ylab="Residuals")
 ```
 
@@ -1616,7 +1627,7 @@ was a possible outlier we have that
 library(alr4)
 attach(forbes)
 mod=lm(lpres~bp,data=Forbes)
-outlierTest(mod)
+mod%>%outlierTest()
 ```
 
     ##    rstudent unadjusted p-value Bonferroni p
@@ -1629,7 +1640,7 @@ help(outlierTest) Since we see we have an outlier in the data let’s
 check the residual plot, and our other diagnostics
 
 ``` r
-ncvTest(mod)
+mod%>%ncvTest()
 ```
 
     ## Non-constant Variance Score Test 
@@ -1637,7 +1648,7 @@ ncvTest(mod)
     ## Chisquare = 0.7529636, Df = 1, p = 0.38554
 
 ``` r
-residualPlots(mod) 
+mod%>%residualPlots() 
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
@@ -1748,7 +1759,7 @@ The point is we can’t remove data because it doesn’t fit our naritive.
 So let’s see how we do this referring to the forbes data we have
 
 ``` r
-infIndexPlot(mod)
+mod%>%infIndexPlot()
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-41-1.png)<!-- --> Note that
@@ -1810,7 +1821,7 @@ model validation in this case.
 Looking at our lab rat example we have the diagnostics
 
 ``` r
-infIndexPlot(Model2)
+Model2%>%infIndexPlot()
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
@@ -1821,7 +1832,7 @@ value in the $X$ space. So the question becomes what does it change in
 the analysis,
 
 ``` r
-Mod22=update(Model2,rat[-3,])
+Mod22=Model2%>%update(rat[-3,])
 Mod22
 ```
 
@@ -1957,7 +1968,7 @@ clearly.
 
 ``` r
 h1<-lm(dheight~mheight, Heights)
-qqnorm(residuals(h1), main="Height QQ-Plot")
+h1%>%residuals()%>%qqnorm(main="Height QQ-Plot")
 ```
 
 ![](Module3_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->

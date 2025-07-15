@@ -119,13 +119,14 @@ When the model is not correct there are many options we have to make corrections
 Let's first look at the case when the mean function is not define correctly.
 
 ```{r cache=TRUE}
+library(dplyr)
 set.seed(523)
 X=rnorm(100,4,2)
 Y=2+3*X+.5*I(X^2)+rnorm(100,0,.5)
 Mod1=lm(Y~X)
 par(mfrow=c(1,2))
 plot(Y~X)
-abline(Mod1)
+Mod1%>%abline()
 plot(Mod1$residuals~Mod1$fitted, xlab="Fitted Values", ylab="Residuals", 
 main="Residual Plot")
 ```
@@ -172,7 +173,7 @@ attach(BigMac2003)
 Mbm=lm(BigMac~log(Bread)+log(Rice))
 plot(Mbm$residuals~Mbm$fitted, xlab="Fitted Values", ylab="Residuals",
 main="Big Mac Residual Plot")
-ncvTest(Mbm)
+Mbm%>%ncvTest()
 ```
 
 Let's look when the appropriate model is used
@@ -186,7 +187,7 @@ main="Big Mac 2 Residual Plot")
 
 After the log transformations are the linearity and constant variance assumptions met?  Easiest way to check again is
 ```{r cache=TRUE}
-ncvTest(Mbm2)
+Mbm2%>%ncvTest()
 ```
 The p value seems to indicate that the variance is constant if we test it at the .05 level. At the .1 level we would say we have non-constant variance.  Again this is why it is so important that you have a great understanding of the real meaning of p-values.  
 
@@ -195,7 +196,7 @@ The p value seems to indicate that the variance is constant if we test it at the
 In previous discussions of the plot when the model we fit was incorrect, it is clearly obvious we have a problem with the assumption that $E(\epsilon \mid U)=0$.  The simplest test is to add a the higher order term (interaction or quadratic terms).  The test statistic for the test is then the test that the higher order terms are zero.  This could result in a t-test for a single coefficient when our linear combination $U$ does not depend on estimated coefficients, so $U \neq \hat{Y}$.  If $U$ is based on the estimated coefficients, then we use a $N(0,1)$   Looking back at our example we have that
 ```{r cache=TRUE}
 ModCurv=lm(Y~X+I(X^2))
-summary(ModCurv)
+ModCurv%>%summary()
 plot(ModCurv$residuals~ModCurv$fitted,
 xlab="Residuals", ylab="Fitted")
 ```
@@ -203,7 +204,7 @@ xlab="Residuals", ylab="Fitted")
 So we see adding the term fixes the residuals, but the most important thing is we have a p-value to confirm the assumption of $E(\epsilon \mid U)=0$ is broken. If we want to check to see if there is overall curvature we would fit $Y\sim \hat{Y}+\hat{Y}^2$ and compare it to a $N(0,1)$ it is known as the Tukey test for nonadditivity.  To do this in R we use the car package in R
 ```{r cache=TRUE}
 library(car)
-residualPlots(Mod1)
+Mod1%>%residualPlots()
 ```
 We will discuss this more in detail later in this course.  
 
@@ -284,19 +285,19 @@ for(i in 1:length(Age)){
 }
 
 Mod=lm(Scale~Age,weight=Wts)
-summary(Mod)
+Mod%>%summary()
 summary(lm(Scale~Age))
 ```
 
 
 Looking at the comparison we see that the fit changes.  We also have that 
 $$
-\Var(\hat{\beta}_{WLS})=\sigma^2(X^TWX)^{-1}
+Var(\hat{\beta}_{WLS})=\sigma^2(X^TWX)^{-1}
 $$
 
 ```{r cache=TRUE}
 plot(wblake$Scale~wblake$Age, main="Increasing Variance",xlab="Age",ylab="Length of Scale")
-abline(Mod)
+Mod%>%abline()
 abline(lm(Scale~Age))
 ```
 
@@ -312,7 +313,7 @@ plot(y~x,physics,type="b")
 m2<-lm(y~x,physics,weights=1/SD^2)
 m1<-lm(y~x+I(x^2),physics,weights=1/SD^2)
 lines(physics$x,m1$fitted,col=2,lty=2)
-abline(m2,col=3,lty=3)
+m2%>%abline(col=3,lty=3)
 m3<-lm(y~x+I(x^2),physics)
 lines(physics$x,m3$fitted,col=4,lty=4)
 legend("topleft",lty=c(2,3,4),col=c(2,3,4), legend=c("Quadratic WLS", "Linear WLS","Quadratic OLS" ))
@@ -321,8 +322,8 @@ legend("topleft",lty=c(2,3,4),col=c(2,3,4), legend=c("Quadratic WLS", "Linear WL
 Comparing the fit of the models we see that the quadratic WLS model seems to fit better in area with lower standard deviations which makes sense to us.
 
 ```{r cache=TRUE}
-summary(m1)
-summary(m2)
+m1%>%summary()
+m2%>%summary()
 ```
 \subsection*{Using Group Means}
 
@@ -358,7 +359,7 @@ $\Var(\bar{\epsilon}_j)=\frac{\sigma^2}{n_j}$
 
 There is another case where WLS is useful.  That is when we have a strictly continuous variable $X$, no repeated measures.  That means there is no great way to to define the variance at any given point but we do observed an overall trend.  Look at the following plot.
 ```{r cache=TRUE}
-plot(cars, main="Stopping Distance of Cars")
+cars%>%plot(main="Stopping Distance of Cars")
 ```
 
 This data has to do with the speed of cars and stopping distance.  We can see the larger the distance the further the stopping distance but we can also see an increasing variance in the distance needed to stop as age increases.  We need a way to model this because there is no way to define the variance for each point, since we only have a single observation.  We need a way to utilize the information of non-constant variance.  To do this define $g(x)$ to be a positive function for all possible $x$.  We can think of this as $\mid x\mid$ or $x^2$, even $exp(\mid x\mid)$.  So we define our model as
@@ -371,7 +372,7 @@ The thing is we must be able to define $g(x)$.  This is the hard part we need to
 
 Let's look at three cases of mean weights for the car data using linear regression.
 ```{r cache=TRUE}
-plot(cars,main="Stopping Distance")
+cars%>%plot(main="Stopping Distance")
 Mc1=lm(dist~speed,cars,weights=1/abs(speed))
 Mc2=lm(dist~speed,cars,weights=1/speed^2)
 Mc3=lm(dist~speed,cars,weights=exp(speed))
@@ -418,18 +419,18 @@ plot(Mncv$residuals~X,ylab="Residuals",main="Residual vs X")
 
 The question becomes we can see that ncv is present how do we obtain a p-value for the NCV test.  
 ```{r cache=TRUE}
-ncvTest(Mncv)
+Mncv%>%ncvTest()
 ```
 
 In this test we look at the residuals against, $\hat{Y}$, so we confirm that the test is a function of the fitted values.  What if we want to test that the NCV is a function of $X$ we do
 ```{r cache=TRUE}
-ncvTest(Mncv,~X)
+Mncv%>%ncvTest(~X)
 ```
 
 In this case we are looking for ncv of the residuals against $X$ which makes sense by the set up of the data set.  Let's say we get lucky and can define the weights correctly so fit the ols to be
 ```{r cache=TRUE}
 WLSM=lm(Y~X,weights=1/X^2)
-summary(WLSM)
+WLSM%>%summary()
 ```
 
 ### Intervals
@@ -441,21 +442,21 @@ We define $w_*$ based on the weights for $x$.  Let's look at the difference betw
 ```{r cache=TRUE}
 CIS=predict(WLSM,weights=1/exp(X),interval="confidence")
 plot(Y~X)
-abline(WLSM)
+WLSM%>%abline()
 points(X,CIS[,2],col=3)
 points(X,CIS[,3],col=4)
-PIS=predict(WLSM,weights=1/exp(X), interval="prediction")
+PIS=WLSM%>%predict(weights=1/exp(X), interval="prediction")
 points(X,PIS[,2],col=5)
 points(X,PIS[,3],col=6)
 ```
 
 ```{r cache=TRUE}
-CIS=predict(Mncv, interval="confidence")
+CIS=Mncv%>%predict(interval="confidence")
 plot(Y~X)
 abline(Mncv)
 points(X,CIS[,2],col=3)
 points(X,CIS[,3],col=4)
-PIS=predict(Mncv,interval="prediction")
+PIS=Mncv%>%predict(interval="prediction")
 points(X,PIS[,2],col=5)
 points(X,PIS[,3],col=6)
 ```
@@ -498,6 +499,8 @@ submodels for this test which we will discuss more in the next section.
 
 ### Variance Stabilizing Transformations
 
+To me this is one of the most important sections in the course, and maybe in statistical modeling.  It's really about how do we get a hold of variance to understand what is going on.  From a practical standpoint this is my go to in modeling.  Weighted least squares is a great tool, but practicality is limiting, you need to know it's in the tool set, but transformations are broadly applicable. 
+
 In this section we have seen a NCV test, but the question is how do we fix non-constant variance.  We know that if we can define the the function of the variance as $Var(\epsilon)=\sigma^2g(x)$, where $g(x)>0$ for all values of $x$ and is a simple function (not to complex and we can write it down).  Then we can just use WLS.  WLS is a great thing when we can use it because we can define a variance function and don't have to change anything in the residuals.  When this doesn't work we use what is referred to as the variance stabilizing transformations, specifically in the case where we can write
 $$
 Var(Y \mid X=x)-\sigma^2g(E(Y\mid X))
@@ -532,17 +535,17 @@ To get an idea of the possible transformations we can use, let's look at the fue
 ```{r cache=TRUE}
 data(fuel2001)
 FuelMod=lm(FuelC~Tax+log(Drivers)+log(Miles)+Income,data=fuel2001)
-residualPlot(FuelMod)
+FuelMod%>%residualPlot()
 ```
 Let's look at both the square root and $\log$ transformations.
 
 ```{r cache=TRUE}
 par(mfrow=c(2,2))
 FuelL=lm(log(FuelC)~Tax+log(Drivers)+log(Miles)+Income, data=fuel2001)
-residualPlot(FuelL)
+FuelL%>%residualPlot()
 FuelS=lm(sqrt(FuelC)~Tax+log(Drivers)+log(Miles)+Income,data=fuel2001)
-residualPlot(FuelS)
-ncvTest(FuelL)
+FuelS%>%residualPlot()
+FuelL%>%ncvTest()
 ```
 
 The left panel is the result of the log transformation while the right plot is the square root transform.  We can see the $\log$ transform seems to do the job.  Checking the tukey non additivity test we get
@@ -558,7 +561,7 @@ Our discussion to this point has been to see how well the model matches the assu
 
 ```{r cache=TRUE}
 c1 <- lm(Height ~ Dbh, ufcwc)
-   mmp(c1, ufcwc$Dbh, label="Diameter, Dbh", col.line=c("blue", "red"))
+   c1%>%mmp(ufcwc$Dbh, label="Diameter, Dbh", col.line=c("blue", "red"))
 ```
 
 So using this type of model we can visually discuss the fit or lack there of in the model.  Another way to do this, and in essence is the same thing is to use marginal model plots.  Marginal model plots  where we plot $Y$ on the vertical axsis, and some $U$ could be $X$, $\hat{Y}$, or any relevant transformation or combination of $X$ we think is interesting.  Fitting a smoother to this plot produces an estimate of $E(Y \mid U)$ without making any modeling assumptions.  We then compare this smooth to $\E(\hat{Y} \mid U)$. 
@@ -567,17 +570,17 @@ To do this we create a smoother of $Y~U$ and then  compare it to a smoother of $
 
 ```{r cache=TRUE}
 m1 <- lm(log(fertility) ~ log(ppgdp) + pctUrban, UN11)
-mmps(m1)
+m1%>%mmps()
 ```
 
 We can check the variance function as well, all we need to do is add the sd=TRUE statement to the code for the marginal model plot.
 ```{r cache=TRUE}
-mmps(m1, sd=TRUE)
+m1%>%mmps(sd=TRUE)
 ```
 
 And for the marginal model plot for the cedar tree data we have that
 ```{r cache=TRUE}
-mmp(c1, ufcwc$Dbh ,sd=TRUE)
+c1%>%mmp(ufcwc$Dbh ,sd=TRUE)
 ```
 
 This is an easy way to communicate how well your model fits based on what you
@@ -706,15 +709,15 @@ Then we choose the transformation that minimizes $RSS(\lambda)$.   Up to this po
 
 ```{r cache=TRUE}
 M1=lm(BrainWt~log(BodyWt),data=brains)
-boxcox(M1)
+M1%>%boxcox()
 ```
 
 Notice 3 lines show up that maximize the likelihood (same as minimizing the RSS).  This grid is the $95\%$ CI for the parameter $\lambda$.  We choose a nice value inside this grid.  This also works for multiple regression problems.
 
 ```{r cache=TRUE}
 M2=lm(BigMac~log(Rice)+log(Bread), data=BigMac2003)
-summary(M2)
-boxcox(M2)
+M2%>%summary()
+M2%>%boxcox()
 ```
 
 Again notice the $95\%$ interval contains log.  So this case suggests a log transformation.  
@@ -722,18 +725,18 @@ Again notice the $95\%$ interval contains log.  So this case suggests a log tran
 Let's see what the inverse fitted value plot has to say about this transformation.
 
 ```{r cache=TRUE}
-#library(alr3)
-invResPlot(M2)
+M2%>%invResPlot()
 ```
 
 We can see this agrees with the box cox method.  So transforming for normality of this residuals, is the same as transforming for residuals.  There is no theoretical reason these two will work together but it is nice to know that they do.  
 
 ### Automatic Selection of Transformation of Predictors
-In a MLR setting we want transformations of predictors so that each of the predictors have a linear mean function against all the others.  Notice this does not denote high linearity it just keeps us from having curvature between predictors.  The idea is we start with $k$ un-transformed predictors $X$.  we apply a modified power transformation to each $X_j$. So now we have $\lambda=(\lambda_1, \ldots, \lambda_k)$.  Let $V(\lambda)$ be the covariance matrix of the transformed predictors, then we want to select a $\hat\lambda$ that minimizes the log determinent of $V$.  This is all well and good and can easily be done using software.  
+In a MLR setting we want transformations of predictors so that each of the predictors have a linear mean function against all the others.  Notice this does not denote high linearity it just keeps us from having curvature between predictors.  The idea is we start with $k$ un-transformed predictors $X$.  we apply a modified power transformation to each $X_j$. So now we have $\lambda=(\lambda_1, \ldots, \lambda_k)$.  Let $V(\lambda)$ be the covariance matrix of the transformed predictors, then we want to select a $\hat\lambda$ that minimizes the log determinant of $V$.  This is all well and good and can easily be done using software.  
 
 To do this in R we will look at an example from the Highway data in alr4 package
 ```{r cache=TRUE}
-summary(powerTransform(cbind(len, adt, shld ,trks, sigs1) ~ 1, Highway1))
+#summary(powerTransform(cbind(len, adt, shld ,trks, sigs1) ~ 1, Highway1))
+Highway1%>%powerTransform(cbind(len, adt, shld ,trks, sigs1) ~ 1,.)%>%summary
 ```
 
 Notice we have the estimates of $\lambda_j$ for each predictors, and standard errors.  These standard errors are useful for creating CI's for each of the variables.  At the bottom we then have a likelihood ratio statistic, and equivalently a p-value. In R we always see 3 transfromations, all 1's (no transform), all 0's (log transform), or the closest nice value to the estimated.  All of these tests compare the listed to the estimated.  We want a nice transformation that is the same as the predicted, and since this is multivariate we can't just select the best from all the CI's we have jointly select them.  In this case it suggests only leaving shld, and replacing all other variables with the log transform.  
@@ -858,8 +861,8 @@ data(rat)
 attach(rat)
 Model2=lm(y~BodyWt+LiverWt+Dose,data=rat)
 help(outlierTest)
-outlierTest(Model2)
-Jack=rstudent(Model2)
+Model2%>%outlierTest()
+Jack=Model2%>%rstudent()
 plot(Model2$res,ylab="Residuals")
 ```
 
@@ -869,13 +872,13 @@ So we can see from the plot we expect case 19 to have the largest studentized re
 library(alr4)
 attach(forbes)
 mod=lm(lpres~bp,data=Forbes)
-outlierTest(mod)
+mod%>%outlierTest()
 ```
 
 This is a case where the Bonferroni correction may not be needed since from the plot we could see that the 12th observation could be a problem.  To see all of the options of viewing the Bonferoni correction see help(outlierTest)  Since we see we have an outlier in the data let's check the residual plot, and our other diagnostics
 ```{r cache=TRUE}
-ncvTest(mod)
-residualPlots(mod) 
+mod%>%ncvTest()
+mod%>%residualPlots() 
 ```
 
 So we can see that the model has an obvious problem but our diagnostics of ncv and curvature do not detect it.  The next question would be how do we fix this?
@@ -951,7 +954,7 @@ because they come from a completely different system.  The point is we can't rem
 ### Example
 So let's see how we do this referring to the forbes data we have
 ```{r cache=TRUE}
-infIndexPlot(mod)
+mod%>%infIndexPlot()
 ```
 Note that the hat-values in this case are the Leverages. So we can see from the plot that observation 12 shows as an outlier, but the Cook's distance is around .5.  Just to be safe let's investigate what happens when the 12th observation is removed
 
@@ -974,13 +977,13 @@ So just visually it doesn't seem like there is a substantial change in the model
 
 Looking at our lab rat example we have the diagnostics
 ```{r cache=TRUE}
-infIndexPlot(Model2)
+Model2%>%infIndexPlot()
 ```
 
 Notice in this case we have a large Cook's Distance of observation 3.  but the residual is small.  What this indicates is that it has an extreme value in the $X$ space.  So the question becomes what does it change in the analysis,
 
 ```{r cache=TRUE}
-Mod22=update(Model2,rat[-3,])
+Mod22=Model2%>%update(rat[-3,])
 Mod22
 Model2
 ```
@@ -1038,7 +1041,7 @@ Clearly 1 is in the CI, so it tells us a transformation for normality is unneces
   If we have more data such as the heights data we can see the normality clearly.
 ```{r cache=TRUE}
 h1<-lm(dheight~mheight, Heights)
-qqnorm(residuals(h1), main="Height QQ-Plot")
+h1%>%residuals()%>%qqnorm(main="Height QQ-Plot")
 ```
 
 There is no question about the normality in the residuals in this case.  The slight deviation from the line in the lower tail is no cause for concern.  In reality not many plots will have slight derivations, it is up to you to decide whether they are important or not.
