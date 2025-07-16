@@ -1,0 +1,54 @@
+---
+title: "Collaborate Session Module 4"
+author: "Brad Price, Ph.D."
+date: "September 14, 2024"
+output: html_document
+---
+
+```{r}
+library(alr4)
+data(MinnLand)
+head(MinnLand)
+str(MinnLand)
+help(MinnLand)
+MinnLand$yearF<-as.factor(MinnLand$year)
+table(MinnLand$yearF)
+boxplot(log(acrePrice)~yearF,data=MinnLand)
+
+Mod2<-lm(log(acrePrice)~yearF*region,data=MinnLand)
+summary(Mod2)
+plot(log(acrePrice)~year,data=MinnLand,type="n",ylim=c(4,10))
+
+years=unique(MinnLand$year)
+years
+regions=unique(MinnLand$region)
+regions
+for(i in 1:length(regions)){
+  newdata=MinnLand[MinnLand$region==regions[i],]
+  means=tapply(log(newdata$acrePrice),newdata$yearF,mean)
+  lines(means~years,col=i,lty=i,type="b")
+}
+legend("bottomright",col=(1:length(regions)),legend=regions,lty=1)
+
+mods<-lm(log(acrePrice)~yearF+region,data=MinnLand)
+anova(mods,Mod2)
+
+data(salary)
+head(salary)
+help(salary)
+t.test(x=salary$salary[salary$sex=="Male"],y=salary$salary[salary$sex=="Female"],alternative = "greater")
+mod2<-lm(salary~sex,data=salary)
+summary(mod2)
+
+mod3<-lm(salary~sex+degree+rank+year+ysdeg,data=salary)
+mod4<-lm(salary~sex+degree+rank+year+ysdeg+sex*rank+sex*degree,data=salary)
+mod5<-lm(salary~.-rank,data=salary)
+confint(mod3)
+anova(mod3,mod4)
+summary(mod3)
+
+table(salary$rank,salary$sex)
+
+data(Wool)
+str(Wool)
+```

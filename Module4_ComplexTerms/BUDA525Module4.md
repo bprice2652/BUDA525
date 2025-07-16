@@ -1,0 +1,1881 @@
+Complex Predictors, ANOVA, and ANCOVA
+================
+Brad Price, Ph.D.
+
+## Introduction
+
+This module starts to kick off a second portion of the course where we
+get beyond fitting and diagnosing problems in regression, but really
+start to talk about how to use models to effectively create
+interpretable results for businesses, and more importantly how to select
+the “best” model for our data. Typically in data analysis we don’t have
+a theory we’re trying to prove, remember you’re representing the data in
+an unbiased fashion, so the details matter. In the coming discussion
+you’ll start to understand how to use variables, transformations both
+local and global, to begin to create better models.
+
+## Complex Predictors
+
+This section is one of the more important sections we have in this
+class. In this section we develop solutions to real world problems. We
+look at how to deal with correlated variables, how can we model sub
+populations, and a few other interesting methods. Our focus to begin
+with will be using factors, categorical variables, in regression. For
+our work we define factor as a non-numeric categorical variable. We also
+need to discuss a definition of a new term, define $I(X=A)$ as the
+indicator when the variable $X$ takes on value $A$. So when we see
+$I(X=A)$ it is either a 1 if $X=A$ or 0 otherwise. In the machine
+learning literature (AI literature) we can also cal this one-hot
+encoding, which predated a lot of the modern transformers. We really
+like it becauase in statistics we want to balance interpretation with
+prediction, this gives us that.
+
+### Using Factors in Regression
+
+Using factors as a predictor variable in regression allows us to model
+sub populations of the data with differently. For example we believe
+that men and women have a different relationship in height and weight,
+they could have different intercepts or slopes which we can model
+directly. The use of factors allow us flexibility in modeling. The
+question is how do they play into creating models? Let’s say for our
+purposes that we have a continuous response variable $Y$ and a
+categorical predictor variable $F$ that has 3 levels $A, B, C$. This
+type of model is known as a one-way design (one factor design). It is
+our belief that the three levels should result in different models. The
+question could also be are the 3 groups different. There are two
+different ways to model this type of data the first is to give a
+baseline for comparison. In this situation we use one of the factors as
+a baseline in this case we will set $A$ to our baseline. What this means
+is that our model takes on the form
+
+$$
+E(Y \mid F)=\beta_0+\beta_BI(F=B)+\beta_CI(F=C)
+$$
+
+So looking at the equation we know that $F$ can take on three values and
+since this is the case let’s look at the three values this can take on.
+
+If $F=A$ $$
+E(Y \mid F=A)=\beta_0
+$$
+
+If $F=B$ $$
+E(Y \mid F=B)=\beta_0+\beta_B
+$$
+
+If $F=C$ $$
+E(Y \mid F=C)=\beta_0+\beta_C
+$$
+
+In other words we can think of this: $$
+\beta_0 =\bar{Y}_A\\
+\beta_B =\bar{Y}_B-\bar{Y}_A\\
+\beta_C = \bar{Y}_C-\bar{Y}_A\\
+$$
+
+It’s easy to see how this interpretation can be extremely useful when
+you are looking to compare treatments to a baseline. Most computer
+programs default to this method.
+
+The other way to fit this model is simple we use a direct model which
+says $$
+E(Y \mid F)=\eta_AI(F=A)+\eta_BI(F=B)+\eta_CI(F=C)
+$$
+
+In this case the interpretation is simple $$
+\eta_A =\bar{Y}_A\\
+\eta_B =\bar{Y}_B\\
+\eta_C =\bar{Y}_C
+$$
+
+From a direct representation perspective this is great, but when the
+model gets more complicated this becomes less useful. Notice there is no
+$\beta_0$ in this model due to over parameterization. Since adding
+$I(F=A) + I(F=B) +I(F=C)$ result in a column vector of 1’s which would
+be representative of the vector associated with $\beta_0$.
+
+For our purposes we will use the baseline model. LookingThe easiest way
+is to look at what R output looks like for this model
+
+``` r
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+library(alr4)
+```
+
+    ## Loading required package: car
+
+    ## Loading required package: carData
+
+    ## 
+    ## Attaching package: 'car'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     recode
+
+    ## Loading required package: effects
+
+    ## lattice theme set by effectsTheme()
+    ## See ?effectsTheme for details.
+
+``` r
+data(UN11)
+attach(UN11)
+Mod=lm(lifeExpF~group)
+Mod%>%summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = lifeExpF ~ group)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -25.8367  -3.3045   0.3635   2.7183  18.2277 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   82.446      1.128  73.095  < 2e-16 ***
+    ## groupother    -7.120      1.271  -5.602  7.1e-08 ***
+    ## groupafrica  -22.674      1.420 -15.968  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 6.28 on 196 degrees of freedom
+    ## Multiple R-squared:  0.6191, Adjusted R-squared:  0.6152 
+    ## F-statistic: 159.3 on 2 and 196 DF,  p-value: < 2.2e-16
+
+``` r
+UN11%>%group_by(group)%>%summarise(GroupMeans=mean(lifeExpF))
+```
+
+    ## # A tibble: 3 × 2
+    ##   group  GroupMeans
+    ##   <fct>       <dbl>
+    ## 1 oecd         82.4
+    ## 2 other        75.3
+    ## 3 africa       59.8
+
+``` r
+## another way to do this
+tapply(lifeExpF,group,mean)
+```
+
+    ##     oecd    other   africa 
+    ## 82.44645 75.32674 59.77226
+
+Notice the means of each group, and the coefficients. The intercept
+corresponds to the dropped level, that is OECD in this case, The mean of
+other is the intercept added to the coefficeient for other, and
+similarly for Africa.
+
+The tests associated with this model have are still the same mechanism
+as any other test we’ve discussed. The interpretation changes, when
+$\beta_j$ is no different from zero in this case it says that there is
+no difference between the coefficient associated with the baseline and
+group we are in. In this case we can see a difference between OECD
+countries and the ones labeled other, and we can also so the difference
+between the OECD countries that that in Africa.
+
+Finally to use the direct coding we just need to change one thing. The
+following R code gives the direct coding example
+
+``` r
+Mod2=lm(lifeExpF~group-1,data=UN11)
+Mod2%>%summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = lifeExpF ~ group - 1, data = UN11)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -25.8367  -3.3045   0.3635   2.7183  18.2277 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## groupoecd    82.4465     1.1279   73.09   <2e-16 ***
+    ## groupother   75.3267     0.5856  128.63   <2e-16 ***
+    ## groupafrica  59.7723     0.8626   69.29   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 6.28 on 196 degrees of freedom
+    ## Multiple R-squared:  0.9927, Adjusted R-squared:  0.9926 
+    ## F-statistic:  8896 on 3 and 196 DF,  p-value: < 2.2e-16
+
+Again great for figuring out means, which the tapply function in R does,
+but doesn’t help in any other situation. Also we lose the interpretation
+of differences in the t-tests. This is the reason most of the time the
+baseline encoding works the best.
+
+### Adding a Continuous Variable
+
+Using a single factor is sometimes useful when we are testing between
+subgroups. This is normally the focus of design of experiment classes
+and ANOVAs, which we will discuss a little bit later. For our purposes
+at the moment factors provide a way to give sub populations unique
+intercepts and unique slopes. In essence we can fit separate regression
+lines for every sub population. So we can see how that can be extremely
+powerful. Let’s look at the situation where we add a continuous variable
+$X$
+
+$$
+E(Y \mid F, X)=\beta_0+\beta_BI(F=B)+\beta_CI(F=C)+\beta_1X
+$$
+
+What this turns into conditioning on the factors is
+
+If $F=A$ $$
+E(Y \mid F=A, X)=\beta_0 +\beta_1X
+$$
+
+If $F=B$ $$
+E(Y \mid F=B, X)=(\beta_0+\beta_B)+\beta_1X
+$$
+
+If $F=C$ $$
+E(Y \mid F=C, X)=(\beta_0+\beta_C)+\beta_1X
+$$
+
+This type of model allows for multiple intercepts, so we can think of
+different tuning parameters or different starting points for each sub
+group. Back to the UN example lets add $\log(ppgdp)$ to the model.
+
+``` r
+Mod3=lm(lifeExpF~group+log(ppgdp),data=UN11)
+Mod3%>%summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = lifeExpF ~ group + log(ppgdp), data = UN11)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -18.6348  -2.1741   0.2441   2.3537  14.6539 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   49.529      3.400  14.569  < 2e-16 ***
+    ## groupother    -1.535      1.174  -1.308    0.193    
+    ## groupafrica  -12.170      1.557  -7.814 3.35e-13 ***
+    ## log(ppgdp)     3.177      0.316  10.056  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 5.109 on 195 degrees of freedom
+    ## Multiple R-squared:  0.7492, Adjusted R-squared:  0.7453 
+    ## F-statistic: 194.1 on 3 and 195 DF,  p-value: < 2.2e-16
+
+Notice now that the intercept and coefficients with the factors are not
+the group means anymore. It now depends on $\log(ppgdp)$. The tests for
+these coefficients test is the intercept is the same for the group and
+the baseline. Look at the coefficient associated with other tests as
+zero. This means that we can’t tell a difference between the intercept
+coefficients for group and OECD. So there is some interpretability but
+it doesn’t work out to be group means.
+
+### Different Slopes
+
+Different intercepts are a useful fit but what if we have two completely
+different lines. To do this is simple we add an interaction variable.
+When we refer as an interaction when two variables are multiplied
+together. So if we had two continuous variables we would look at
+$X_1*X_2$. That seems easy enough but what about a factor $X*F$? It
+simply turns into the continuous variable multiplied by each subgroup of
+the variable. So the equation becomes $$
+E(Y \mid F, X)=\beta_0+\beta_BI(F=B)+\beta_CI(F=C)+\beta_1X+ \beta_{1B}XI(F=B)+\beta_{1C}XI(F=C)
+$$
+
+So we see there is no $X*A$ variable in the model what that means is
+that $\beta_1X$ is the baseline slope or the slope for group $A$. When
+we condition on the factor we get three distinct models, a unique SLR
+for each subgroup
+
+If $F=A$ $$
+E(Y \mid F=A, X)=\beta_0 +\beta_1X 
+$$
+
+If $F=B$ $$
+E(Y \mid F=B, X)=(\beta_0+\beta_B)+\beta_1X +\beta_{1B}X= (\beta_0+\beta_B)+(\beta_1+\beta_{1B})X
+$$
+
+If $F=C$ $$
+E(Y \mid F=C, X)=(\beta_0+\beta_C)+\beta_1X +\beta_{1C}X= (\beta_0+\beta_C)+(\beta_1+\beta_{1C})X
+$$
+
+Again the example of this with the UN data is
+
+``` r
+Mod4=lm(lifeExpF~group*log(ppgdp), data=UN11)
+Mod4%>%summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = lifeExpF ~ group * log(ppgdp), data = UN11)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -18.634  -2.089   0.301   2.255  14.489 
+    ## 
+    ## Coefficients:
+    ##                        Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)             59.2137    15.2203   3.890 0.000138 ***
+    ## groupother             -11.1731    15.5948  -0.716 0.474572    
+    ## groupafrica            -22.9848    15.7838  -1.456 0.146954    
+    ## log(ppgdp)               2.2425     1.4664   1.529 0.127844    
+    ## groupother:log(ppgdp)    0.9294     1.5177   0.612 0.540986    
+    ## groupafrica:log(ppgdp)   1.0950     1.5785   0.694 0.488703    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 5.129 on 193 degrees of freedom
+    ## Multiple R-squared:  0.7498, Adjusted R-squared:  0.7433 
+    ## F-statistic: 115.7 on 5 and 193 DF,  p-value: < 2.2e-16
+
+The question becomes what does this say about the coefficients? How does
+this model answer the question about the differences in the groups? What
+we can now say is that the coefficients that are for the interaction
+terms are not significant. We know in this case there is no difference
+between the group and the baseline. What this means is that we can’t
+tell a difference between OECD and africa and OECD and other. In this
+case it means we don’t need unique slopes, but we have seen if there are
+no slopes we have different intercepts but this model tells a different
+story. Which do we choose? WE NEVER INTERPRET SINGLE VARIABLES WHEN WE
+HAVE HIGHER ORDER VARIABLES IN A MODEL. Remove interactions before
+worrying about the lower order terms.
+
+We can also add many factors to a model where factor interactions look
+at even more specific subgroups. When we refer to main effects we refer
+to all first order factors and variables. The pairwise interactions of
+every variable plus all main effects make up the second order model. If
+any variable is continuous the squared terms are included as well. If
+all variables are factors we use ANOVA’s to solve the problem. Note that
+if interactions of factors are used but there is no data exists for that
+subgroup NA’s appear in the model, and the coefficients don’t mean what
+you think they do.
+
+## Polynomials
+
+Up to this point we have dealt only in straight line mean functions or
+the multi dimensional counter parts. We define polynomial regression as
+$$
+E(Y \mid X)=\beta_0 +\sum_{m=1}^d \beta_mX^m
+$$ where $d$ is an integer. The simplest example of this type of model
+is $$
+E(Y \mid X)=\beta_0+\beta_1X 
+$$ But again that is a straight line, the simplest non straight curve is
+represented using quadratic regression $$
+E(Y \mid X)=\beta_0 +\beta_1X+\beta_2X^2.
+$$
+
+Quadratic regression are extremely nice because they allow us to model
+data that increases or decreases that doesn’t resemble a straight line.
+So we have two cases; fucntions with maximums and functions with
+mimimums.
+
+``` r
+X=rnorm(1000)
+Y=X^2
+par(mfrow=c(1,2))
+plot(Y~X,main=" Data with a Min")
+plot(-Y~X, main="Data with Max")
+```
+
+![](BUDA525Module4_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+These mean functions are great when we observe maximum or minimums in
+our data. If this is true the minimum or maximum value is at
+$\frac{-\beta_1}{2\beta_2}$. Quadratic can also be used when we don’t
+observe the maximum or minimum values. Sometimes this leads to bad
+models with terrible interpretation. At that point we use the model as
+an approximation and don’t take it at it’s word. This is a difficult
+problem to attack, and higher order terms can become meaningless
+scientifically very quickly.
+
+We can use polynomials with more than one predictor, the analogous to
+the quadratic model is known as the full second order model which is
+defined as $$
+E(Y \mid X)=\beta_0 +\beta_1X_1+\beta_2X_2+\beta_{11}X_1^2+\beta_{22}X_2^2+\beta_{12}X_1X_2
+$$
+
+This problem can get out of hand if you use more than two predictors for
+example 3, then we add a single main effect and two interactions. If we
+want a full model we would have to add a three way interactions and all
+cubic terms. Now try to interpret your model. Alot of time we want the
+higher order terms of single variables to not be significant we will
+talk about how to delete these terms later.
+
+The best example of when these models matter are when we know two
+variables can react a high values or low values. Again we are going to
+go back to the baking example. Let $X_1$ be the baking time in minuets
+and $X_2$ be the temp in degrees F. Y is the average quality score of
+the cakes. The model from the cakes data in R is
+
+``` r
+MC=lm(Y~X1*X2+I(X1^2)+I(X2^2),data=cakes)
+MC%>%summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Y ~ X1 * X2 + I(X1^2) + I(X2^2), data = cakes)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.4912 -0.3080  0.0200  0.2658  0.5454 
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) -2.204e+03  2.416e+02  -9.125 1.67e-05 ***
+    ## X1           2.592e+01  4.659e+00   5.563 0.000533 ***
+    ## X2           9.918e+00  1.167e+00   8.502 2.81e-05 ***
+    ## I(X1^2)     -1.569e-01  3.945e-02  -3.977 0.004079 ** 
+    ## I(X2^2)     -1.195e-02  1.578e-03  -7.574 6.46e-05 ***
+    ## X1:X2       -4.163e-02  1.072e-02  -3.883 0.004654 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.4288 on 8 degrees of freedom
+    ## Multiple R-squared:  0.9487, Adjusted R-squared:  0.9167 
+    ## F-statistic:  29.6 on 5 and 8 DF,  p-value: 5.864e-05
+
+Numerical issues can occur when using polynomials, first $X^d$ and
+$X^{d-1}$ can be highly correlated. With large or small numbers
+numerical errors can occur (rounding). To minimize this we can use
+orthogonal polynomials. What that means is the first variable we would
+use $Q_1$ to be $X-\bar{X}$ and then $Q_2$ would be the residuals for
+the model $X^2\sim Q_1$. $Q_3$ would be $X^3\sim Q_1+Q_2$. So the cubic
+model would be $$
+E(Y \mid X)=\beta_0+\beta_1Q_1+\beta_2Q_2+\beta_3Q_3
+$$
+
+The R code that will do this is
+
+``` r
+set.seed(217)
+XP=2*runif(40)
+YP=2+3*XP+4*XP^2+5*XP^3+rnorm(40)
+M6=lm(YP~poly(XP,3,raw=FALSE))
+M6%>%summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = YP ~ poly(XP, 3, raw = FALSE))
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.38850 -0.79651 -0.01649  0.66948  1.79546 
+    ## 
+    ## Coefficients:
+    ##                           Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)                20.3494     0.1400 145.361  < 2e-16 ***
+    ## poly(XP, 3, raw = FALSE)1 102.1458     0.8854 115.368  < 2e-16 ***
+    ## poly(XP, 3, raw = FALSE)2  36.7823     0.8854  41.544  < 2e-16 ***
+    ## poly(XP, 3, raw = FALSE)3   4.3874     0.8854   4.955 1.72e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.8854 on 36 degrees of freedom
+    ## Multiple R-squared:  0.9976, Adjusted R-squared:  0.9974 
+    ## F-statistic:  5020 on 3 and 36 DF,  p-value: < 2.2e-16
+
+``` r
+M7=lm(YP~poly(XP,3,raw=TRUE))
+M7%>%summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = YP ~ poly(XP, 3, raw = TRUE))
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.38850 -0.79651 -0.01649  0.66948  1.79546 
+    ## 
+    ## Coefficients:
+    ##                          Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)                2.3500     0.6615   3.553  0.00109 ** 
+    ## poly(XP, 3, raw = TRUE)1   1.5167     2.7197   0.558  0.58052    
+    ## poly(XP, 3, raw = TRUE)2   5.3369     3.0301   1.761  0.08668 .  
+    ## poly(XP, 3, raw = TRUE)3   4.7926     0.9672   4.955 1.72e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.8854 on 36 degrees of freedom
+    ## Multiple R-squared:  0.9976, Adjusted R-squared:  0.9974 
+    ## F-statistic:  5020 on 3 and 36 DF,  p-value: < 2.2e-16
+
+Interpretation of these parameters are extremely hard. It just depends
+on the purposes, if we could consider this a growth curve model. So the
+derivative would be the growth rate at a certain time. Which would be a
+combination of the $\beta$’s which could be tested and CI’s given.
+
+### Cubic B Splines
+
+So a polynomial of one variable $X$ can be written in the form $$
+E(Y \mid X)=\beta_0 +\sum_{m=1}^d \beta_mX^m
+$$ Increasing $d$ can completely change the fits of our model.
+
+``` r
+mp1=lm(Interval~poly(Duration,1),oldfaith)
+mp2=lm(Interval~poly(Duration,2),oldfaith)
+mp3=lm(Interval~poly(Duration,3),oldfaith)
+mp4=lm(Interval~poly(Duration,4),oldfaith)
+mp5=lm(Interval~poly(Duration,5),oldfaith)
+x <- with(oldfaith, seq(min(Duration), max(Duration), length=100))
+plot(Interval~Duration,oldfaith)
+lines(x, predict(mp1, newdata=data.frame(Duration=x)))
+lines(x, predict(mp2, newdata=data.frame(Duration=x)),col=2)
+lines(x, predict(mp3, newdata=data.frame(Duration=x)),col=3)
+lines(x, predict(mp4, newdata=data.frame(Duration=x)),col=4)
+lines(x, predict(mp5, newdata=data.frame(Duration=x)),col=5)
+legend("topleft", c("d=1","d=2","d=3","d=4","d=5"),col=1:5,lty=rep(1,5))
+```
+
+![](BUDA525Module4_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+All 5 different models have different fits, one way to think about this
+is that each element of the polynomial $X^m$ is a different function of
+$X$. So each $X^m$ can be considered a basis function and $E(Y \mid X)$
+as a weighted sum of the basis functions where $\beta_m$ is a weight.
+Since values like $X^m$, referred to as mononomials, are defined for all
+values of $X$. This means it will not be good for describing local
+changes in the data. Think of the two clusters in the old faithful data,
+we want a process that describes the linear change between the two
+clusters but remains constant (or close to it) inside the clusters.
+Splines provide a set of basis functions that act locally on the data.
+So changing the weight of each of the basis functions will only effect
+the curve on a limited range. So given a basis we can calculate the
+weights by doing standard OLS. So the form is now $$
+E(Y \mid X=x)=\beta_0 +\sum_{m=1}^d \beta_mb_m(x),
+$$ where $b_m$ is the $m$th basis function. So changing $\beta_m$ will
+only change the fitted values on a local region. We will refer to a
+specific class of splines that use a basis called Cubic B Splines. We
+call them cubic because the basis functions are continuous functions
+with first and second derivatives that are continuous. We should note
+that all splines not just b splines have a problem modeling the edge of
+the data this is by design (same issue with smoothers).
+
+Just like polynomials we need to specify how many degrees the basis has.
+In cubic b splines this defines the number of vectors in the basis, we
+can think of this as a smoothing parameter $d$. Selecting $d$ changes
+the fit so let’s apply basis splines to the old faithful data.
+
+``` r
+library(splines)
+m1 <- lm(Interval ~ bs(Duration, df=5), oldfaith)
+plot(Interval ~ Duration, oldfaith)
+x <- with(oldfaith, seq(min(Duration), max(Duration), length=100))
+lines(x, predict(m1, newdata=data.frame(Duration=x)))
+m2<-lm(Interval~bs(Duration,df=4),oldfaith)
+lines(x, predict(m2, newdata=data.frame(Duration=x)),col=2)
+m3=lm(Interval~bs(Duration,df=3),oldfaith)
+lines(x, predict(m3, newdata=data.frame(Duration=x)),col=3)
+legend("topleft", c("d=5","d=4","d=3"),col=1:3,lty=rep(1,3))
+```
+
+![](BUDA525Module4_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+Notice that when $d=3$ we have the desirable property that the mean
+function for the clusters is constant and there is a linear increase
+between the two clusters. The cases $d=4,5$ seem to oversmooth the
+functions. Notice everything we’ve done here is graphical that is
+because these basis functions don’t really have a great interpretation,
+so the weights $\beta$’s aren’t really of interest to us.
+
+We can also add variables to to splines, these are what we refer to as
+additive models. Let $bs(X,d)$ be notation for a cubic B spline basis
+with $d$ vectors for the predictor $X$. Then if we have $p$ predictors
+we want to model we fit the mean function, $$
+E(Y \mid X)=\beta_0 +\sum_{j=1}^pbs(X_j,d_j).
+$$
+
+The mean function allows for a unique B spline basis for each variable.
+This means we can look at the effect plot of each variable by just
+fixing everything but $X_j$ at it’s mean. Factors and Interactions can
+also be added.
+
+Note this section isn’t a full description of the methodology used for
+b-splines, we will approach that a little deeper in BUDA 530, when we
+discuss non-linear regression.
+
+## Principal Components
+
+Principal Components is a ’’dimension reduction” technique for data to
+find an underlying relationship between variables. The idea is to use
+your variables $X$ that are correlated to find latent or underlying
+variables $Z$ that are not correlated. Problems exist with this method,
+but what it can allow us to do is use summary statistics or weighted
+averages of the originial variables to find useful information. It’s
+probably the most complex, over used, and misused regression techniques.
+We will discuss PC’s in terms of use in regression here and again in
+Data Mining.
+
+The idea is we want the number of variables of $Z$ that are created to
+be less than the number of variables in the matrix $X$. The process this
+is done by is what is referred to as an eigen decomposition. This solves
+the eigen value problem such that for some square matrix $C$, we can
+decompose the matrix to
+
+Where $O$ is a $p\times p$ orthonormal matrix. Orthonormal means $O$ has
+the property $OO^T=O^TO=I_p$. $D$ is a $p \times p$ diagonal matrix.
+Each column of $O$ $o_j$ is and each diagonal element of $D$ $d_{jj}$
+are unique to one another they are the solution to the problem   
+There are many ways to solve this problem, it was a big deal when it was
+first developed, that we don’t need to discuss. See any linear algebra
+book for a solution. What we care about is how does this apply to
+statistics. Define the columns of $O$ to be the eigenvectors and the
+elements on the diagonal of $D$ to be the corresponding eigenvalues. The
+principal components are defined by the eigenvectors and we can order
+them by the size of the eigenvalues. Look in at the plot
+
+``` r
+library(mvtnorm)
+set.seed(220)
+X=rmvnorm(100,c(0,0),sigma=matrix(c(1,.8,.8,1),2,2))
+dataEllipse(X[,1],X[,2],xlab="X1",ylab="X2",main="Relationship From Data to PC")
+```
+
+![](BUDA525Module4_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+Define an order of the eigenvalues to be
+$d_{11} \geq d_{22} \geq \ldots \geq d_{pp} \geq 0$. So the pair
+$d_{11}, o_1$ are important because they describe the direction of
+highest variation between the variables in the data. In the data example
+presented in the ellipse we can see that would be in a direction
+extending from the lower left to the upper right of the ellipse. It
+won’t go directly through the ellipse but will extend very close to it
+(this is because the ellipses are based on normal assumptions and the
+PC’s are just based on the data. Ok so if $d_{11}, o_1$ correspond to
+the highest direction of variation in the data, what do $d_{22}, o_2$
+correspond to? The answer to that is the next highest direction of
+variation defined by the data THAT IS ORTHOGONAL (INDEPENDENT) of the
+first eigenvector. Then $d_{33}, o_3$ are the next highest directions of
+variation in the data that are orthogonal to the first and second
+eigenvector. You can see how this continues until you have $p$
+eigenvectors.
+
+``` r
+(PC=prcomp(scale(X)))
+```
+
+    ## Standard deviations (1, .., p=2):
+    ## [1] 1.3270160 0.4889054
+    ## 
+    ## Rotation (n x k) = (2 x 2):
+    ##            PC1        PC2
+    ## [1,] 0.7071068  0.7071068
+    ## [2,] 0.7071068 -0.7071068
+
+This still doesn’t resolve of how this problem matters to us in
+regression let alone statisticians in general. So our basic problem is
+correlated predictors in regression, interpretation is no good or
+sometimes the predictors are representative of the same thing (Sum of
+skin folds and Bodyfat in the ais data). Our techniques don’t work well
+in this situation, so principal components allow us to access predictors
+that are no long correlated. The idea is that the first eigenvector is
+the highest direction of variation in the data (the direction that has
+the highest correlation), and then the second is the second highest
+direction of variation orthogonal to the first direction. This continues
+until you have $p$ eigenvectors.
+
+So instead of using $X$ we would use $Z$ instead. The corresponding
+$Z$’s for our new data are show here. Notice the ellipse is now not
+detecting any (very little) of a relationship.
+
+``` r
+Z=X%*%PC$rotation
+dataEllipse(Z,main="New Uncorrelated Variables",xlab="Z1",ylab="Z2")
+```
+
+![](BUDA525Module4_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+So again we define the new $j$th variable of $Z$ to be $$
+Z_j=o_{1j}X_1+o_{2j}X_2+\ldots+o_{pj}X_p=Xo_j
+$$
+
+To create the full matrix $Z$ all we do is $Z=XU$
+
+The qustion now becomes we know we want to use $q<p$ of our new
+variables $Z$ how  
+do we choose $q$ the first is simply to plot the eigenvalues, since
+large eigenvalues correspond to components that account for much of the
+variation in $X$ than small one correspond to minimal values. To do this
+we just look for a large change in eigenvalues, which we will call an
+elbow. That means where we see a significant decrease in the
+eigenvalues.
+
+``` r
+EV=c(1,.9,.8,.001,.001,.001,.001)
+plot(EV)
+```
+
+![](BUDA525Module4_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+In this 6 dimensional example the significant decrease in the
+eigenvalues happen after the third eigenvalue so we will only use the
+first 3 principal components. This is an ideal case so another thing we
+can do is to look at the percent of the variation that is accounted for
+by each eigenvector, and the corresponding total variation by using the
+set of $q$ principal components. To do this we look at the quantity $$
+V_j=\frac{d_{jj}}{\sum_{m=1}^p d_{mm}}
+$$
+
+Where $V_j$ is the variance explained by the $j$th PC. Then define $T_q$
+as $$
+T_j=\sum_{l=1}^J V_l
+$$
+
+We can then choose $q$ based on a percentage of variance that is
+accounted for by a certain threshold for the above 6 dimensional example
+we would have $T$ for every $j$ to be
+
+``` r
+EV/sum(EV)
+```
+
+    ## [1] 0.3698224852 0.3328402367 0.2958579882 0.0003698225 0.0003698225
+    ## [6] 0.0003698225 0.0003698225
+
+``` r
+S=rep(0,length(EV))
+for(i in 1:length(EV)){
+if(i==1){S[i]=EV[1]}
+if(i != 1){S[i]=S[i-1]+EV[i]}
+}
+T=S/sum(EV)
+T
+```
+
+    ## [1] 0.3698225 0.7026627 0.9985207 0.9988905 0.9992604 0.9996302 1.0000000
+
+Again we would pick a value that corresponding to achieving a threshold.
+So if we wanted $70%$ of the variation accounted for we would choose
+$q=2$, if we wanted $90%$ of the variation accounted for we would choose
+$q=3$. Note that $q=p$ always corresponds to 100% of the variation
+accounted for.
+
+Let $Z^{(q)}$ be the matrix of the first $q$ variables of $Z$ then our
+regression becomes $$
+E(Y \mid X)=\beta_0 +Z^{(q)}\beta
+$$
+
+### Comments on PCR (Principal Components Regression)
+
+- Interpretation Still Matters
+
+Again we have created a new set of variables that are independent to do
+our regression on. The first comment is that if the principal components
+you choose are not interpretable, but $X$ is then there is not much to
+gain here. You might as well just use $B$ splines. So it is important
+you understand what the component means. If all values of the component
+are equal and have the same sign it can be viewed as an average. Just
+like in our example above the first PC is an average. Other PC’s of
+interest are the difference between sets of variables, just as in the
+second PC. We also are interested in sets of PC where the eigenvectors
+have a lot of 0’s. This means only a few of the variables matter, we can
+say small relative coefficients are 0. Relative in this case means that
+if one coefficient is .9 and another that is -.7 and the rest are .05
+and smaller, we can consider the smaller values negligible.
+
+- Scaling
+
+Principal Components and the eigenvalue decomposition is dependent on
+the scale of the data, if the data is not scaled properly the variance
+components will be off, thus your PC’s will be off. Scaling means center
+every variable at 0 and have standard deviation of 1. DO NOT USE PC IF
+YOUR SAMPLE IS NOT RANDOM. If the sample is not random the scaling will
+not result in estimates of the population mean and variance, which means
+the data is then on an arbitrary scale. Since PC’s are dependent on the
+scale it is extremely hard to reproduce the exact same analysis on
+different samples. This is the reason we like when all of the variables
+we are trying to deal with in PCR are representative of the same
+information or are already on the same scale.
+
+- Variation in $X$ does not correspond to $Y\mid X$
+
+Notice the only thing PC’s are doing is giving us independent
+predictors, it is explaining variation in $X$ not $Y$ this is not
+something to be ignored. Sometimes you may miss a relevant component
+because it does not have high variation in the $X$ space. There have
+been many methods developed to correct for this see your text for the
+references.
+
+### Longley Data
+
+For this example we are going to refer to the longley data from the
+faraway package. This is economic data fro 1942-1967. We are going to
+use the number of people employed as a function of GNP, GNP deflator,
+Unemployed, Number of people in the Armed Forces. First let’s start off
+by scaling the data and preforming principal components on the
+predictors.
+
+``` r
+library(faraway)
+```
+
+    ## 
+    ## Attaching package: 'faraway'
+
+    ## The following objects are masked from 'package:alr4':
+    ## 
+    ##     cathedral, pipeline, twins
+
+    ## The following objects are masked from 'package:car':
+    ## 
+    ##     logit, vif
+
+``` r
+head(longley)
+```
+
+    ##      GNP.deflator     GNP Unemployed Armed.Forces Population Year Employed
+    ## 1947         83.0 234.289      235.6        159.0    107.608 1947   60.323
+    ## 1948         88.5 259.426      232.5        145.6    108.632 1948   61.122
+    ## 1949         88.2 258.054      368.2        161.6    109.773 1949   60.171
+    ## 1950         89.5 284.599      335.1        165.0    110.929 1950   61.187
+    ## 1951         96.2 328.975      209.9        309.9    112.075 1951   63.221
+    ## 1952         98.1 346.999      193.2        359.4    113.270 1952   63.639
+
+``` r
+X=longley[,-7]
+Employed=longley[,7]
+PC=princomp(scale(X))
+summary(PC)
+```
+
+    ## Importance of components:
+    ##                           Comp.1    Comp.2     Comp.3      Comp.4       Comp.5
+    ## Standard deviation     2.0774181 1.0497055 0.43670503 0.118301490 0.0489138186
+    ## Proportion of Variance 0.7672295 0.1958901 0.03390423 0.002488043 0.0004253443
+    ## Cumulative Proportion  0.7672295 0.9631196 0.99702383 0.999511871 0.9999372153
+    ##                              Comp.6
+    ## Standard deviation     1.879265e-02
+    ## Proportion of Variance 6.278469e-05
+    ## Cumulative Proportion  1.000000e+00
+
+``` r
+PC$loadings
+```
+
+    ## 
+    ## Loadings:
+    ##              Comp.1 Comp.2 Comp.3 Comp.4 Comp.5 Comp.6
+    ## GNP.deflator  0.462         0.149  0.793  0.338  0.135
+    ## GNP           0.462         0.278 -0.122 -0.150 -0.818
+    ## Unemployed    0.321 -0.596 -0.728               -0.107
+    ## Armed.Forces  0.202  0.798 -0.562                     
+    ## Population    0.462         0.196 -0.590  0.549  0.312
+    ## Year          0.465         0.128        -0.750  0.450
+    ## 
+    ##                Comp.1 Comp.2 Comp.3 Comp.4 Comp.5 Comp.6
+    ## SS loadings     1.000  1.000  1.000  1.000  1.000  1.000
+    ## Proportion Var  0.167  0.167  0.167  0.167  0.167  0.167
+    ## Cumulative Var  0.167  0.333  0.500  0.667  0.833  1.000
+
+``` r
+PC$sdev^2
+```
+
+    ##       Comp.1       Comp.2       Comp.3       Comp.4       Comp.5       Comp.6 
+    ## 4.3156660273 1.1018817181 0.1907112866 0.0139952425 0.0023925617 0.0003531639
+
+Looking at the percentage of variation accounted for we’re going to go
+with $95\%$ we would want to first 2 PC’s, while 99% would be the first
+three components. The question becomes do we want 2 or 3 components?
+Look at the interpretation of the components. The first PC look’s like
+the average of all the variables. The second PC is a weighted difference
+between the armed forces and the unemployed. The question is does this
+make sense? World War II was happening during this period so the
+difference between the military size and unemployment may be a good
+variable to look at. The first is a year effect and since this is a time
+series it seems that this is reasonable as well. The third PC is not
+clear what it means. Now let’s run our regression on the first two PC.
+
+``` r
+Z=scale(X)%*%PC$loadings[,1:2]
+head(Z)
+```
+
+    ##         Comp.1     Comp.2
+    ## 1947 -3.478851 -0.7514663
+    ## 1948 -3.010510 -0.8490405
+    ## 1949 -2.343300 -1.5399966
+    ## 1950 -2.093902 -1.2763204
+    ## 1951 -1.438240  1.2357941
+    ## 1952 -1.010258  1.9221044
+
+``` r
+ModPC2=lm(Employed~Z)
+summary(ModPC2)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Employed ~ Z)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.83922 -0.52416  0.04553  0.74571  1.62193 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  65.3170     0.2515 259.703  < 2e-16 ***
+    ## ZComp.1       1.5651     0.1211  12.928 8.51e-09 ***
+    ## ZComp.2       0.3918     0.2396   1.635    0.126    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.006 on 13 degrees of freedom
+    ## Multiple R-squared:  0.9289, Adjusted R-squared:  0.9179 
+    ## F-statistic:  84.9 on 2 and 13 DF,  p-value: 3.45e-08
+
+``` r
+round(vcov(ModPC2),3)
+```
+
+    ##             (Intercept) ZComp.1 ZComp.2
+    ## (Intercept)       0.063   0.000   0.000
+    ## ZComp.1           0.000   0.015   0.000
+    ## ZComp.2           0.000   0.000   0.057
+
+``` r
+ModAug=lm(Employed~Year+I(Armed.Forces-Unemployed),data=longley)
+summary(ModAug)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Employed ~ Year + I(Armed.Forces - Unemployed), 
+    ##     data = longley)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.3310 -0.3467 -0.1264  0.5346  1.1658 
+    ## 
+    ## Coefficients:
+    ##                                Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)                  -1.391e+03  7.889e+01 -17.638 1.84e-10 ***
+    ## Year                          7.454e-01  4.037e-02  18.463 1.04e-10 ***
+    ## I(Armed.Forces - Unemployed)  4.119e-03  1.525e-03   2.701   0.0182 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.7178 on 13 degrees of freedom
+    ## Multiple R-squared:  0.9638, Adjusted R-squared:  0.9582 
+    ## F-statistic:   173 on 2 and 13 DF,  p-value: 4.285e-10
+
+``` r
+round(vcov(ModAug),3)
+```
+
+    ##                              (Intercept)   Year I(Armed.Forces - Unemployed)
+    ## (Intercept)                     6222.965 -3.185                       -0.032
+    ## Year                              -3.185  0.002                        0.000
+    ## I(Armed.Forces - Unemployed)      -0.032  0.000                        0.000
+
+We se we have two very interpretable models, with very low covariance
+between coefficients. The question is which is better? That will be
+answered in later chapters, but how do we know that 2 variables, or 2
+components are better than 3? The variation accounted for just says the
+variation accounted in the space of the predictors, how can we tell if
+they are useful in explaining $Y$.
+
+## Analysis of Variance (ANOVA)
+
+Up to this point the we have discussed tests that take the form $$
+NH: \,\,\, \theta =\theta_0\\
+AH: \,\,\, \theta \neq \theta_0
+$$
+
+Where the test statistic takes on the form $$
+t=\frac{\hat{\theta}-\theta}{se(\hat{\theta})}
+$$
+
+Where $\hat{\theta}$ is an estimate of the model parameter $\theta$. The
+idea is that the larger $\mid t\mid$ is the more support we have that
+$\theta_0$ is not the true parameter. Smaller values support that
+$\theta_0$ could be the true parameter. In our case we’ve looked at
+$\theta$ as $\beta$ our regression coefficient. In our cases our null
+distribution has been $t$ distribution with $n-p-1$ degrees of freedom.
+You in your intro class and in our class have referred to these tests as
+“T-Tests”. They are also referred to as Wald’s Test. Anything of the
+form of the difference between an estimate and hypothesised value
+standardized by an estimate of the variance, is referred to as a Wald
+Test.
+
+This test is standard for when we are interested in just a single
+coefficient. What about when we are concerned about a model as a whole?
+Or what about when we add a variable to the model, should we keep it or
+drop it? These are major questions that need to be answered but we don’t
+have the ability to answer these with t-tests. To answer these questions
+we need to do a comparison of mean functions rather than parameters. In
+linear regression this leads to F-tests, these are also called ANOVA’s,
+Analysis of Variance tests. The ANOVA test is also an LRT, likelihood
+ratio test, just because of the way the tests are developed.
+
+### F-Tests
+
+Let $X_1$ be the model matrix of $q$ variables of the model
+corresponding to $$
+M_1: \,\,\,E(Y \mid X_1)=X_1\beta_1
+$$ where $\beta_1$ is a $q+1$ dimensional vector of regression
+coefficients for Model 1. Define $X=(X_1,X_2)$. Where $X_1$ is defined
+as previously and $X$ is a $n \times (p+1)$ model matrix corresponding
+to the model $$
+M_2:\,\,\, E(Y \mid X)=X\beta=X_1\beta_1+X_2\beta_2
+$$
+
+Where $X_2$ are the $p-q$ variables not included in $X_1$. All we are
+doing here is creating to models where $M_1$ is a submodel of model two.
+Submodel in this context means that every variable in model one appears
+in Model 2. Another way to think of this is that $M_1$ is a special case
+of $M_2$ where $\beta_2$=0.
+
+We also know that the RSS measures the amount of variation in the
+response that we couldn’t explain in our model. So we need to design a
+test that tests if we are explaining more or the same amount of
+variation in $M_2$ as $M_1$. We will never be able to explain less
+variation with $M_2$ because all the information in $M_1$ is also
+contained in $M_2$. To design our test we define a null and alternative
+hypothesis: $$
+NH: M_1\\
+AH: M_2\\
+$$ In this case the null hypothesis says that the mean function is the
+model defined by $M_1$, and the alternative is a better mean function is
+$M_2$. The more complex model is ALWAYS the AH, the NH is ALWAYS a
+submodel of AH. Using the fact that NH is a submodel of AH we have that
+$RSS_{NH}\geq RSS_{AH}$. Now the idea is that since $M_2$ has more
+predictors than $M_1$ then $M_2$ is more complex, therefore if we don’t
+need a larger model we don’t want one. We want to keep models
+informative yet simple, if we can gain information by adding terms that
+is fine, but how do we know the information added is useful enough and
+not just error. We do this through an F-Test also known as the ANOVA F
+Test. The anova F-Test looks to see if reducing a large model like $M_2$
+to a smaller model $M_2$ will give be worth it. We want to know if
+$RSS_{NH}-RSS_{AH}$ is large enough. Let
+$\hat{\sigma}^2=\frac{RSS_{AH}}{df_{AH}}$. The general form for this
+test statistic is $$
+F=\frac{(RSS_{NH}-RSS_{AH})/(dF_{NH}-df_{AH})}{\hat{\sigma}^2}
+$$
+
+We call the numerator of the F-Test the Mean Square Regression. If we
+assume the errors are independent $N(0,\sigma^2)$ then F has a
+distribution $F(df_{NH}-df_{AH}, df_{AH})$. See your text for a more
+indepth study of F tests we will just suffice to say that it is the
+ratio of two independent chi-square variables.
+
+### Overall F-Test
+
+Let’s look at the simplest case which is the case when
+
+$$
+NH:\,\, E(Y \mid X)=\beta_0=\bar{Y}\\
+AH:\,\, E(Y \mid X)= \beta_0+\beta_1 X
+$$
+
+So we know the $RSS_{NH}=SYY$ by default. Note that anytime we have the
+intercept only model $\hat{\beta}_0=\bar{Y}$. Then $df_{NH}=n-1$. Define
+RSS then to be the residual sum of squares for
+$E(Y \mid X)= \beta_0+\beta_1 X$ with $n-2$ degrees of freedom. Then the
+overall F-Test is $$
+F=\frac{(SYY-RSS)/((n-1)-(n-2))}{\hat{\sigma}^2}\\
+=\frac{SSReg}{\hat{\sigma}^2}
+$$ The test statistic follows an F(1,n-2) distribution. We formalize
+this test in an anova table.
+
+#### UN Data
+
+``` r
+library(alr4)
+attach(UN11)
+Mod=lm(lifeExpF~log(ppgdp))
+summary(Mod)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = lifeExpF ~ log(ppgdp))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -25.749  -2.879   1.280   3.987  12.345 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  29.8148     2.5314   11.78   <2e-16 ***
+    ## log(ppgdp)    5.0188     0.2942   17.06   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 6.448 on 197 degrees of freedom
+    ## Multiple R-squared:  0.5964, Adjusted R-squared:  0.5943 
+    ## F-statistic: 291.1 on 1 and 197 DF,  p-value: < 2.2e-16
+
+``` r
+anova(Mod)
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Response: lifeExpF
+    ##             Df  Sum Sq Mean Sq F value    Pr(>F)    
+    ## log(ppgdp)   1 12102.5 12102.5  291.09 < 2.2e-16 ***
+    ## Residuals  197  8190.7    41.6                      
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+The Table in this case breaks down into
+
+<style type="text/css">
+.table {
+&#10;    width: 80%;
+&#10;}
+</style>
+
+| Variable   | Df                | SS    | MS               | F                      |
+|------------|-------------------|-------|------------------|------------------------|
+| Regression | $df_{NH}-df_{AH}$ | SSReg | MSReg            | MSReg/$\hat{\sigma}^2$ |
+| Residuals  | $df_{AH}$         | RSS   | $\hat{\sigma}^2$ |                        |
+
+This is only for the simple linear regression case. Notice the test
+statistic and p-value of anova match to the F-statistics reported at the
+bottom of the summary.
+
+For the general p-dimensional regression case the overall anova f-test
+is preformed the same way we just now define $$
+NH:\,\, E(Y \mid X)=\beta_0=\bar{Y}\\
+AH:\,\, E(Y \mid X)= X\beta
+$$
+
+Now think about what this means, the hypothesis asks you to choose
+between two models, the first says use no information from the
+predictors the second says use the information from the predictors. If
+we find that these models are the same then we say that the simplest
+model (the model with no information about the predictors) is the best.
+
+Then the F-Test is $$
+F=\frac{(SYY-RSS)/((n-1)-(n-p-1))}{\hat{\sigma}^2}\\
+= \frac{(SYY-RSS)/p}{\hat{\sigma}^2}\\
+=\frac{SSReg}{\hat{\sigma}^2}
+$$
+
+In R this looks like
+
+``` r
+Mod2=lm(lifeExpF~log(ppgdp)+log(fertility),data=UN11)
+Mod2%>%summary()
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = lifeExpF ~ log(ppgdp) + log(fertility), data = UN11)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -21.4214  -2.0981   0.3305   2.7921  11.8559 
+    ## 
+    ## Coefficients:
+    ##                Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)      62.992      3.813  16.520  < 2e-16 ***
+    ## log(ppgdp)        2.440      0.345   7.075 2.59e-11 ***
+    ## log(fertility)  -12.447      1.208 -10.306  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 5.206 on 196 degrees of freedom
+    ## Multiple R-squared:  0.7382, Adjusted R-squared:  0.7356 
+    ## F-statistic: 276.4 on 2 and 196 DF,  p-value: < 2.2e-16
+
+``` r
+Mod2%>%anova()
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Response: lifeExpF
+    ##                 Df  Sum Sq Mean Sq F value    Pr(>F)    
+    ## log(ppgdp)       1 12102.5 12102.5  446.55 < 2.2e-16 ***
+    ## log(fertility)   1  2878.7  2878.7  106.22 < 2.2e-16 ***
+    ## Residuals      196  5312.0    27.1                      
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+The F-Statistics and the anova now do not match up. The F-Test at the
+bottom of the summary corresponds to the overall ANOVA, the anova
+produced will be discussed later. The interpretation of the overall
+F-test is whether the model does anything relative to just using the
+mean. If we are fitting large models, we expect this to be significant.
+Notice this F-test isn’t saying that our model is a great model, it just
+says that it is better than using just the mean of $Y$.
+
+### F-Test For Model Comparison
+
+Since we can compare the two models $$
+NH:\,\, E(Y \mid X)=\beta_0=\bar{Y}\\
+AH:\,\, E(Y \mid X)= X\beta
+$$
+
+Can we not compare
+
+$$
+NH: M_1: \,\,\,E(Y \mid X_1)=X_1\beta_1
+$$
+
+The methodology remains the same but rather than to see if our model is
+better than using just the mean function, we want to know which mean
+function is better. Again we follow the general F-Test proposed above
+
+$$
+F=\frac{(RSS_{NH}-RSS_{AH})/(dF_{NH}-df_{AH})}{\hat{\sigma}^2}
+$$
+
+Using this methodology we get that
+
+``` r
+anova(Mod,Mod2)
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Model 1: lifeExpF ~ log(ppgdp)
+    ## Model 2: lifeExpF ~ log(ppgdp) + log(fertility)
+    ##   Res.Df    RSS Df Sum of Sq      F    Pr(>F)    
+    ## 1    197 8190.7                                  
+    ## 2    196 5312.0  1    2878.7 106.22 < 2.2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+We can see that the resulting p-value is numerically 0. What this means
+is that the two models are different more specifically the fact we see a
+significant decrease in RSS between the two models. What this says is
+that we should add log fertility to the model. Ideally we can do this
+with more than one variable and the resulting test will tell us which
+model fits the data better while taking into account the number of
+parameters in the model. This LRT method is much better for model
+selection than $R^2$ because it does take into account the number of
+terms in the model. The major restriction is that the null model MUST BE
+A SUBMODEL of the alternative model.
+
+## Power
+
+For a fixed $\alpha$ the probability of rejecting the NH is called the
+power of a text. We officially define power as probability of detecting
+a false NH.  
+$$
+Power=Prob(F<f^* \mid\, AH \,is\, true)
+$$
+
+To understand the power of a test we have to understand what the
+distribution of the the test when the AH is true. That means we’ll have
+a non centerality parameter involved. I’ll refer you to your text book
+for more references on power, because non-centrality is something that
+differs every distribution.
+
+### ANOVA (A Model Selection Perspective)
+
+Given we have $p$ predictors in a model, we have many different tests we
+could do. Which coefficients do we test? Do we need to test the
+differences between coefficients? How good is our mean function compared
+to a reduced version of it? Alot of tests but no clear answer to which
+one is correct. In this calss we adopt the marginality principle. What
+this means if higher order terms are in a model we don’t not test lower
+order terms.
+
+Let $A$, $B$, and $C$ represent some type of variable we have discussed
+(continuous, b-spline, factor, PC). Look at the model $$
+E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C+\beta_{12}AB +\beta_{13}AC +\beta_{23}BC+\beta_{123}ABC
+$$
+
+The idea is that if $ABC$ is in the model all lower order terms that
+include $A, B,$ or $C$ should be included. The first test of concern in
+this model is the 3 way interaction $ABC$ needed. To test this we do $$
+AH: E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C+\beta_{12}AB +\beta_{13}AC +\beta_{23}BC+\beta_{123}ABC\\
+NH: E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C+\beta_{12}AB +\beta_{13}AC +\beta_{23}BC
+$$ Again we can just use an ANOVA. If we select the null model is
+selected based on the ANOVA our process is done. If not we remove the 3
+way interaction and coutinue reducing.
+
+Let’s say we’ve reduced the model to the form $$
+E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C +\beta_{23}BC
+$$
+
+The question becomes can we test the following models
+
+$$
+AH: E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C +\beta_{23}BC\\
+NH: E(Y\mid X)= \beta_0+\beta_2B+\beta_3C+\beta_{23}BC
+$$
+
+The answer is YES! There is no higher order term based on $A$ so we
+don’t need it. The ANOVA described here is known as the Type II ANOVA,
+and it should be read from top to bottom. Based on the tests. THIS IS
+NOT THE DEFAULT IN R!!! To preform this ANOVA in R we use the Anova
+function from the car package.
+
+``` r
+M3=lm(lifeExpF~log(ppgdp)*group,data=UN11)
+library(car)
+M3%>%Anova(type=2)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: lifeExpF
+    ##                  Sum Sq  Df  F value Pr(>F)    
+    ## log(ppgdp)       2639.8   1 100.3376 <2e-16 ***
+    ## group            3100.3   2  58.9203 <2e-16 ***
+    ## log(ppgdp):group   12.7   2   0.2409 0.7862    
+    ## Residuals        5077.7 193                    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+The bottom test is the same that would be given if we tested if the
+interaction was needed in this model. The test on each line is the test
+of that model against the largest model in the data set. In this case we
+see that the interaction has a large p-value, while the main effects
+have small p-values. This means that we should fit a line using
+different intercepts but similar slopes. Always think of the last line
+of the type II anova as the RSS corresponding to the largest model, the
+next to last line always looks to remove the interaction term.
+
+### Type I ANOVA (Default in R)
+
+The Type I ANOVA can also be called the sequential ANOVA. The second
+name seems more fitting, because this is the one model we discuss where
+ORDER MATTERS!!!! The idea of a sequential ANOVA is take the model $$
+E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C+\beta_{12}AB +\beta_{13}AC +\beta_{23}BC+\beta_{123}ABC
+$$
+
+The terms of the ANOVA Table would then represent the following models
+$$
+M1: \,E(Y\mid X)= \beta_0+\beta_1A\\
+M2 :\,E(Y\mid X)= \beta_0+\beta_1A+\beta_2B\\
+M3 :\,E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C\\
+M4: \,E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C+\beta_{12}AB \\
+M5: \,E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C+\beta_{12}AB +\beta_{13}AC\\
+M6: \,E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C+\beta_{12}AB +\beta_{13}AC +\beta_{23}BC\\
+M7: \,E(Y\mid X)= \beta_0+\beta_1A+\beta_2B+\beta_3C+\beta_{12}AB +\beta_{13}AC +\beta_{23}BC+\beta_{123}ABC\\
+$$
+
+Each line in the anova compare two adjacent models, for instance the
+ANOVA table for the setting above would break down like
+
+| Variable | Comparison             |
+|----------|------------------------|
+| A        | $M1$ vs Intercept Only |
+| B        | $M2$ vs $M1$           |
+| C        | $M3$ vs $M2$           |
+| AB       | $M4$ vs $M3$           |
+| AC       | $M5$ vs $M4$           |
+| BC       | $M6$ vs $M5$           |
+| ABC      | $M7$ vs $M6$           |
+
+So we can see how order matters in this context. The only case this
+isn’t true is when you have orthogonal terms.
+
+``` r
+M3%>%Anova(type=2)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: lifeExpF
+    ##                  Sum Sq  Df  F value Pr(>F)    
+    ## log(ppgdp)       2639.8   1 100.3376 <2e-16 ***
+    ## group            3100.3   2  58.9203 <2e-16 ***
+    ## log(ppgdp):group   12.7   2   0.2409 0.7862    
+    ## Residuals        5077.7 193                    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+M3%>%anova()
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Response: lifeExpF
+    ##                   Df  Sum Sq Mean Sq  F value Pr(>F)    
+    ## log(ppgdp)         1 12102.5 12102.5 460.0097 <2e-16 ***
+    ## group              2  3100.3  1550.2  58.9203 <2e-16 ***
+    ## log(ppgdp):group   2    12.7     6.3   0.2409 0.7862    
+    ## Residuals        193  5077.7    26.3                    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Type III Anova
+
+The Type III ANOVA violates the maginality principle. It computes tests
+for terms adjusted for every other term. We can view this as similar to
+the $\beta$ coefficients, which we know adjust for other terms in the
+model. These tests depend on parameterization, and our normal baseline
+model for factors does not lend itself to Type III Anova. SAS and SPSS
+uses Type III as default but will allow you to use a Type II ANOVA. JMP
+and Stata also have Type III anova but do not appear to give a Type II
+option. Again if predictors are orthogonal Type I, Type II and Type III
+ANOVA are identical.
+
+### Testing Linear Combinations of Coefficients
+
+Up to this point we’ve use the assumptions that $$
+\hat{\beta} \sim N(\beta, V)\\
+\hat{V}=\hat{\sigma}^2(X^TX)^{-1}
+$$ This changes based on what the objective function used, but all the
+ideas will still hold. Sometimes we are interested in testing linear
+combinations of coefficients. The idea is we may want to know the
+difference between two coefficients. It’s easy to see in a 3 factor
+example using baseline coding when we would want to compare the non
+baseline factors to each other. For a general combination we define $$
+l=a_0\beta_0+a_1\beta_1+\ldots+a_p\beta_p
+$$
+
+Then $$
+\hat{l}=a_0\hat{\beta}_0+a_1\hat{\beta}_1+\ldots+a_p\hat{\beta}_p
+$$
+
+Then we assume that $$
+\hat{l}\sim N(l, a^TVa)
+$$ where $a=(a_1,\ldots,a_p)$.
+
+Then we test $\hat{l}$ just as we would any other $\beta$. We have an
+estimate and standard error.
+
+### Interpretation of Tests
+
+The p-value is the conditional probability of observing a test
+statistics as extreme or more extreme than the observed value, given the
+NH is true. We always assume that the NH is the truth. A small p-value
+provides evidence against the NH. For the most part people adopt a fixed
+significance level, $\alpha$ where we reject NH if $p<\alpha$. The most
+common value of $\alpha$ is .05, what this means is about $5\%$ of the
+time we will find evidence against the null given the NH is true, 1 out
+or 20 times. These type of rules of significance are fine for most
+scientific questions, a better approach would be reporting pvalues and
+letting readers decide significance. There is a difference between
+statistical significance and scientific significance, the first depends
+on the p-value the latter depends on possibly the magnitude of
+coefficients, or other material not directly interpret able from a
+p-value.
+
+There are many other issues with p-values, EVERYONE NEEDS TO READ
+SECTION 6.4.3 of the text, because it points out something very
+important. A lot of the time what we consider significant really is a
+false discovery. Again I’m going to refer you to the book because it is
+a very dense discussion.
+
+Another important point is that tests don’t tell the whole story, maybe
+you’ve modeled your data incorrectly. So your tests are really
+irrelevant. You can also stack the deck in favor of finding results. The
+UN data we’ve referred to is one situation where this has happened. The
+data could be split in to Africa and Not Africa, instead we split not
+Africa again. Breaking up into OECD countries and Other, divided the
+countries into a richer and poorer form not in Africa. Any test we run
+should show significance, because we built the model to show it. The
+data not the idea based this test, so it really says the comparison of
+African countries and non African countries irrelevant.
+
+### Multiple Testing
+
+Multiple testing is a big idea for what we need to think about. If you
+run 100 tests at $\alpha=.05$ we expect to to see 5 tests return
+significant, which would be considered false discoveries. To safe guard
+against this we need to control the error rates, this could mean using
+the significance level $\alpha/D$ where D is the number of tests we run.
+This will control for some of the problems, but not all. See a design of
+experiments book for how to control error rates in different situations.
+We will discuss this again when we talk about outliers.
+
+The file drawer problem is similar to this. The idea is that 100
+experimenters are trying to prove the same thing, about $5\%$ will
+return a significant results of there experiment. The definition of the
+problem is that the $5\%$ of the researchers will get published for this
+experiment while the $95\%$ will put there experiment in a file close
+the drawer and move on. So you may think something is significant just
+because you’ve seen the $5\%$ of the studies that show significance, but
+have no idea that the other $95\%$ exists. This is the reason a major
+newspaper got bashed for publishing the significance of a test on ESP.
+
+Other things we should realize is that just because we find significance
+in a lab doesn’t mean we’ll find it when the ideas are implemented. In a
+lab you have the ultimate control, in the real world you don’t. This is
+something to keep in mind when you are actually applying your analysis.
+
+## A Design of Experiements Perspective
+
+Up to this point we’ve talked about having data given to us, and
+typically in business (especially in the current climate) you use
+observational data. Observational data is data that didn’t come from a
+designed experiment, so think of it as the buzz words that come with
+dark data, data lakes etc. So the first thing we should do is discuss
+experimentation vs observation just a little bit deeper.
+
+Gary Oehlert, in his book title A First Course in Design and Analysis of
+Expeiments, says “an \*\* experiment \*\* is characterized by the
+treatments and experimental units, to be used, the way treatments are
+assigned to units, and the reponses that are measured.” Designed
+experiements allow for direct comparison between treatment groups,
+minimize any bias, and gain control that allows for inferences about the
+nature of the differences.
+
+The entire reason for designed experiments over observational studies is
+the control we gain in assignment of treatments. The problem with
+observational studies is that the mechinism for selection is unknown so
+making strong inferenes can be hard. In causal studies Mosteller and
+Tuke list three concepts associated with cause:
+
+- Consistency
+
+Consistency means that the relationship between variables is consistent
+across all populations in al direction and maybe in amount.
+
+- Reponsiveness
+
+Responsiveness means that we observe changes in the response when the
+treatment is changed accordingly.
+
+- Mechinism
+
+There is a mechinism that takes us step by step from cause to effect.
+
+In an experiment you gain control, so you can evaluate responsiveness.
+If you see significant differences we infer it came from the treatment,
+and the mechinism, becomes unimportant, to make the conclusion. The
+mechinisim is important when it comes to explinations, so you shoudl
+continue to investigate it.
+
+When it comes to what the experimental design is its about thinking
+through the problem, what are your treatments, what are your units of
+measuement, and how are you going to randomize your treatment
+assignments to avoid bias.
+
+There are many terms that appear in design of experiments (DOE), but one
+major one to think of and see is confounding varibles. Confounding
+variables, means the effect of a single variable can not be
+distinguished form another variable. There are many business
+applications that have this and a major goal should be to keep
+confounding variables from happening. There are many ways to make this
+happen but the basics come down to randomization of treatment across the
+population.
+
+### Randomization
+
+Randomization does not mean you do things in a haphazard manner. It
+means that treatments are assigned under a probabilitistic model, for
+instance you could randomize a marketing approach, or a website design
+by randomly generating random numbers assigned to treatment levels,
+where each number occurs with equal probability.
+
+Now this is a simple example and we need to thnk about all the different
+things that can come into play and how it can effect everything else.
+For instance in the marketing example we’d want to account for race,
+gender, location, and the million other factors you can try to account
+for to help prevent confounding variables. These are the things we have
+to think about, these are the things we need ot understand when wanting
+to do inference at this level. Any software you have will have the
+ability to produce psuedo-random numbers, which is how you’ve done
+bootstrap etc, so you can utilize this as you go.
+
+There are some basic designs you should understand a be familiar with as
+you move forward. The first design is the completely randomized designs
+(CRD). All the CRD does is give $g$ treatments to compare, using $N$
+units. You select sample sizes $n_1,\ldots,n_g$ such that $$
+\sum_{k=1}^g n_k=N.
+$$ Then we randomly sample $n_1$ units to recieve treatment 1, then
+randomly select $n_2$ units to recieve treatment 2, and so on for all
+the treatments.
+
+I know it sounds simplisitic, and unrealistic but sometimes its the best
+thing you can do.
+
+### How does ANOVA tie in?
+
+So in the method I’ve described, what does this sound like? Isn’t this
+just a regression with factors? The same assumptions are need to make
+inference off of these coefficients. This is just testing is there a
+differece between the $g$ groups, not just when compared to a baseline
+but in general.
+
+The idea is that in a single factor model, that is only one response the
+Sum of Squares regression is the sum of squares associated with the
+treatments, which is just the overall ANOVA F-Test we discussed
+previously. You’ll start to see a theme of this section (which is why I
+save it for last), that most of this stuff is just what you learned in
+this previous part of the module, just under the fact you’ve designed
+the study.
+
+The hypothesis is that
+
+$$ 
+H_0: \mu_1=\ldots=\mu_g\\
+H_A:  \text{$H_0$ is false}
+$$
+
+For the moment we’ll only worry about a single treatment, as adding a
+second treatment brings in the combinotorics of the situation and in
+most situation desgining an experiment in business requires more
+complexity.
+
+## Multiple Comparisons
+
+We know ANOVA tells us there is a statistical difference but what about
+when we care about the difference between the subgroups. This requires
+multiple comparisons, and control for discovery rates. This brings us
+back to the multiple testing problem, what do we need to control for and
+how do we preform these tests. What we want to do is compare the means
+for the groups to see what groups are simiilar or different, ideally we
+could just compare the coefficients using t-tests and move on. Not
+necessarily, there are many methods for this and error rates to contorl.
+
+- Comparisonwise Error Rate— The probability of rejecting the null when
+  the null is true in any possible comparison.
+- Experimentwise Error Rate— The probabily of rejecting one or more
+  nully hypothesis in a group of tests when $H_0$ is true.
+- False Discovery Rate— The probability of a type 1 error.
+- Strong Familywise Error Rate– The probability of making a false
+  discovery.
+- Simultaneious CI’s—- All CI’s must cover the true parameter with a
+  given probability. Constrols strong familywise error rate.
+
+There are methods that allow us to control for these probabilities, the
+main ones we focus on are Bonferoni corrections and Tukey HSD. Tukey
+honest significant difference (HSD) is a comparison method that allows
+for simulatanieous confience intervals on all pairs of means. Bonferoni
+we’ve discussed in previous sections.
+
+TukeyHSD provides confidence intervals and comparisons for all possible
+combinations of means. It controls for the strong familywise error rate.
+We could go through all the math, but that would take an entire module
+in itself, the most important part is that you understand what it does
+and how to interpret it.
+
+### ANCOVA
+
+A lot of the time you’ll hear about ANCOVA models as something separate
+from regression but I claim they aren’t. ANVOCA stands for Analysis of
+Covariance, what this means is we bring continuous predictors into this
+model. This is something I’ve expeirienced across the board with
+consulting and project work with many types of orgainzations, especially
+in marketing.
+
+Think of a situation where you wish to offer a discount to an individual
+account that your company holds. Now that account, is connected to a
+purchaser for a client/company you are supplying, these can be accounts
+of all different sizes. Some may make monthly purchaces, while some may
+make daily, some may have 10 emplyoees, while some may have thousands.
+The question is how do we adjust for this information to see if the
+client was effected in a positive manner by the discount? Can we adjust
+for this information (think MLR, and modeling sub populatins). We just
+fit a model, with an indicator of the discount, and then continuous
+variables by size, and number of purchases. That’s really all this comes
+down to is using linear models to understand what variable we implmented
+in our design.
+
+### Metrodome Example
+
+Until 2010 the Minesota Twins of Major League Baseball played in the
+Metrodome in downtown Minneapolis. As you can guess by the name it was a
+covered dome, there was a theory that the air conditioning changed the
+distance the ball traveled. An experiment was run in March of 2003 and
+May of 2003. Look at the help file for domedata in the alr4 package.
+
+First let’s look at using the airconditiong to see if it changed the
+distance the ball traveled
+
+``` r
+m1<-lm(Dist~Cond,data=domedata1)
+m1%>%anova()
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Response: Dist
+    ##           Df Sum Sq Mean Sq F value Pr(>F)
+    ## Cond       1    164  163.58  0.1722 0.6791
+    ## Residuals 94  89270  949.68
+
+We should check model plots but overall there isn’t much of an issue,
+possibly normality, but you could get around that if needed. For our
+purpose this is to show the mechinism. We find a p-value of .6791, this
+says that the condition variable doesn’t add anything to the model, and
+that the variable is not important.
+
+Well that’s great but think abut our study that isnt’ sufficient, and we
+know there are two different months, so let’s look at if it matters
+after month is taken into account.
+
+``` r
+library(alr4)
+m2<-lm(Dist~Date+Cond,data=domedata1)
+m2%>%anova()
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Response: Dist
+    ##           Df Sum Sq Mean Sq F value    Pr(>F)    
+    ## Date       1  16239 16239.2 20.7706 1.572e-05 ***
+    ## Cond       1    483   483.3  0.6182    0.4337    
+    ## Residuals 93  72711   781.8                      
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+This says that after accounting for the date it was recorded the air
+conditioning does not matter. Think about it is this still the right
+model or even the right ANOVA to use? If not try what you think is the
+best method to use.
+
+Finally let’s actually take into account all the variables we have so we
+can better understand what we’re getting into. The idea is to see the
+effect of the AC after adjusting for everything we can’t control (read
+this as ANCOVA).
+
+``` r
+m3<-lm(Dist~Date+Angle+Velocity+BallWt+BallDia+Cond,data=domedata1)
+aov(m3)
+```
+
+    ## Call:
+    ##    aov(formula = m3)
+    ## 
+    ## Terms:
+    ##                     Date    Angle Velocity   BallWt  BallDia     Cond Residuals
+    ## Sum of Squares  16239.19   259.88 65441.47   253.18    23.98    13.16   7202.35
+    ## Deg. of Freedom        1        1        1        1        1        1        89
+    ## 
+    ## Residual standard error: 8.995851
+    ## Estimated effects may be unbalanced
+
+Again we see that this isn’t significant after all the metrics are taken
+into account, so we reject the theory that the direction fo the AC is
+the metrodome has any effect on the distance the ball travels.
+
+### Warp Breaks Example
+
+The warpbreaks data from the datasets package in R, gives the number of
+warpbreaks per loom of yarn. There are two variables, tension, and type
+of wool, we want to understand how tension plays a role in the number of
+breaks that will occur during this process. Think if a machine breaks
+the loom, then you must reset everything. First let’s look at the data
+using a basic anova. Look at the help file for more details.
+
+``` r
+m4<-lm(breaks~wool+tension,data=warpbreaks)
+m4%>%anova()
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Response: breaks
+    ##           Df Sum Sq Mean Sq F value   Pr(>F)   
+    ## wool       1  450.7  450.67  3.3393 0.073614 . 
+    ## tension    2 2034.3 1017.13  7.5367 0.001378 **
+    ## Residuals 50 6747.9  134.96                    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Notice what we see here we see that wool would be significant at the .01
+level, and tension is significant at any normal level we’d think of.
+Again this is where it’s important to understand p-values. Just to be
+complete let’s look the residual plots to make sure our assumptions are
+met.
+
+``` r
+par(mfrow=c(2,2))
+plot(m4)
+```
+
+![](BUDA525Module4_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+
+For the most part this doesn’t look to awful, but there could be some
+non-constant variance, and curvature. Let’s look at the curvature first
+to see if we can take care of that
+
+``` r
+m5<-lm(log(breaks)~wool*tension,data=warpbreaks)
+m5%>%anova()
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Response: log(breaks)
+    ##              Df Sum Sq Mean Sq F value   Pr(>F)   
+    ## wool          1 0.3125 0.31253  2.2344 0.141511   
+    ## tension       2 2.1762 1.08808  7.7792 0.001185 **
+    ## wool:tension  2 0.9131 0.45657  3.2642 0.046863 * 
+    ## Residuals    48 6.7138 0.13987                    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+par(mfrow=c(2,2))
+plot(m5)
+```
+
+![](BUDA525Module4_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+Again it looks like we have non-constant variance, so how would you fix
+this? How do you approach the problem? Give thought to how you would
+make the correction and try it out.
+
+Let’s assume that we’ve corrected this problem, and now we are looking
+to preform a comparison of the tension levels to see where that
+difference lies. That requires a Tukey HSD interval. To do this, we use
+the following commands:
+
+``` r
+aov(log(breaks)~wool+tension,data=warpbreaks)%>%TukeyHSD("tension")
+```
+
+    ##   Tukey multiple comparisons of means
+    ##     95% family-wise confidence level
+    ## 
+    ## Fit: aov(formula = log(breaks) ~ wool + tension, data = warpbreaks)
+    ## 
+    ## $tension
+    ##           diff        lwr         upr     p adj
+    ## M-L -0.2871237 -0.6015821  0.02733456 0.0800278
+    ## H-L -0.4892747 -0.8037330 -0.17481643 0.0012831
+    ## H-M -0.2021510 -0.5166093  0.11230732 0.2755448
+
+Looking at the results each line of the output talks to us about the
+interval and test that two levels of tension would be equal. The far
+left column tells you what is being compared Going throught his we find
+the 95% intervals are between the lower and upper bound on the
+difference (reminder this is on the log scale). We see p-values
+associated with these tests as well. So on these results using the
+traditional .05 level we’d say theres only a significant difference
+between High and Low. If we use .01, theres also a difference between
+medium and low. Again this comes down to understanding the use of
+p-values on the desicion making process.
+
+### A/B Testing
+
+A/B testing is something that has been popularized in the tech industry,
+but is basic desgin of experiment philosophy. We want to be able to
+compare two treatments, (webpages, marketing stratigies, etc), this is a
+new movement in the tech industry to use data to make changes rather
+than philosophy in general. The response in this case is what makes the
+problem interesting, because we could look at click through rates
+(binomial), Transactions per user (Poisson), or many other things that
+don’t follow the continuous or psuedo-continuous responses we choose to
+think about. We will discuss these methods throughout the curiculum, but
+just don’t think this is a one size fits all problem.
